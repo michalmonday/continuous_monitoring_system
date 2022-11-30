@@ -1,7 +1,7 @@
 // File copied from:
 // https://github.com/Byteahalf/riscv_online_debug/blob/master/RISCV/fifo.v
 
-`timescale 1ns/1ps
+`timescale 1ns/10ps
 
 module async_fifo
 #(

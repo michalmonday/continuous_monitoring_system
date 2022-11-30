@@ -1,4 +1,4 @@
-`timescale 1 ns/10 ps  // time-unit = 1 ns, precision = 10 ps
+`timescale 1ns/10ps  // time-unit = 1 ns, precision = 10 ps
 
 module dut_trace_filter;
     localparam clk_period = 5;

@@ -1,4 +1,4 @@
-`timescale 1ns/1ps  // time-unit = 1 ns, precision = 10 ps
+`timescale 1ns/10ps  // time-unit = 1 ns, precision = 10 ps
 
 module dut_continuous_monitoring_system;
     localparam XLEN = 64;
@@ -10,7 +10,7 @@ module dut_continuous_monitoring_system;
     wire M_AXIS_tvalid, M_AXIS_tlast;
     wire [AXI_DATA_WIDTH-1:0] M_AXIS_tdata;
 
-    reg clk=0, rst_n=1;
+    reg clk=0, rst_n;
     reg [XLEN-1:0] pc = 4;
     reg [31:0] instr;
     reg pc_valid=1;
@@ -31,70 +31,30 @@ module dut_continuous_monitoring_system;
         .tlast_interval(3)
     );
 
-    initial
-    begin
-
-        instr =  32'h00000000;
-        #period; 
-
-        // riscv branch instruction
-        instr =  32'h0000006f;
-        #period;
-
-        // blt     a0, a1, .LBB0_2
-        instr = 32'b1100011000000001000001100011;
-        #period;
-
-        // riscv jalr instruction
-        instr =  32'h00000067;
-        #period;
-
-        instr =  32'h00000000;
-        #period; 
-
-        // riscv jal instruction
-        instr =  32'h000000ef;
-        #period;
-
-        // addi t0, t1, 10
-        instr = 32'b00000000000100110000000000010011;
-        #period;
-
-        instr =  32'h00000000;
-        #period; 
-
-        // riscv branch instruction
-        instr =  32'h0000006f;
-        #period;
-
-        // blt     a0, a1, .LBB0_2
-        instr = 32'b1100011000000001000001100011;
-        #period;
-
-        // riscv jalr instruction
-        instr =  32'h00000067;
-        #period;
-
-        // riscv jal instruction
-        instr =  32'h000000ef;
-        #period;
-
-        // addi t0, t1, 10
-        instr = 32'b00000000000100110000000000010011;
-        #period;
-    end 
-
     always 
     begin
         clk = ~clk;
         #clk_period;
     end
 
+    reg [3:0] i = 0;
     always @ (posedge clk) begin
         pc = pc +4;
+        i = i + 1;
+        case (i)
+            0: instr = 32'h00000000; // nop
+            1: instr = 32'h0000006f; // riscv branch instruction
+            2: instr = 32'b1100011000000001000001100011; // blt     a0, a1, .LBB0_2
+            3: instr = 32'h00000067; // riscv jalr instruction
+            4: instr = 32'h00000000; // nop
+            5: instr = 32'h000000ef; // riscv jal instruction
+            6: instr = 32'b00000000000100110000000000010011; // addi t0, t1, 10
+            7: instr = 32'h00000000; // nop
+            8: instr = 32'h0000006f; // riscv branch instruction
+            9: instr = 32'b1100011000000001000001100011; // blt     a0, a1, .LBB0_2
+            default: instr = 32'h00000000; // nop
+        endcase
     end
-
-
 
 
 // module continuous_monitoring_system #(

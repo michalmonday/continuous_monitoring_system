@@ -1,3 +1,5 @@
+`timescale 1ns/10ps
+
 module dram #(
     parameter WORD_SIZE = 64,
     parameter ADDR_SIZE = 8,

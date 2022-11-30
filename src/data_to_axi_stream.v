@@ -2,11 +2,11 @@
 // https://github.com/Byteahalf/riscv_online_debug
 // Originally created by Jiacheng Zhu
 
-`timescale 1ns/1ps
+`timescale 1ns/10ps
 
-module data_to_axi_stream#(
+module data_to_axi_stream #(
     parameter DATA_WIDTH = 1024
-)(
+) (
     input clk,
     input rst_n,
     input write_enable,
@@ -77,6 +77,20 @@ module data_to_axi_stream#(
             endcase 
         end
     end
+    
+//  wire     fifo_full;  
+//  wire     fifo_threshold;  
+//  wire     fifo_overflow;  
+//  wire     fifo_underflow;  
+//  // 7. DUT Instantiation
+// // fpga4student.com: FPga projects, Verilog projects, VHDL projects  
+//  fifo_mem tb (/*AUTOARG*/  
+//    // Outputs  
+//    fifo_dout, fifo_full, fifo_empty, fifo_threshold, fifo_overflow,   
+//    fifo_underflow,   
+//    // Inputs  
+//    clk, rst_n, write_enable, fifo_rden, data_pkt  
+// //    );
 
     sync_fifo#(
         .DATA_DEPTH   (32),

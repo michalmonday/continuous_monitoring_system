@@ -19,6 +19,7 @@
 // (* always_ready, always_enabled *) method Bit#(Report_Width) tgc_evt_EVICT;
 // (* always_ready, always_enabled *) method Bit#(Report_Width) tgc_evt_SET_TAG_WRITE;
 // (* always_ready, always_enabled *) method Bit#(Report_Width) tgc_evt_SET_TAG_READ;
+`timescale 1ns/10ps
 
 
 module continuous_monitoring_system #(
@@ -48,16 +49,15 @@ module continuous_monitoring_system #(
         .drop_instr(drop_instr)
     );
 
-    wire data_pkt = {pc, instr};
-    wire write_enable = pc_valid & ~drop_instr;
+    wire [AXI_DATA_WIDTH-1:0]data_pkt = {pc, instr};
 
     data_to_axi_stream #(
         .DATA_WIDTH(AXI_DATA_WIDTH) // pc + instr sizes
     ) data_to_axi_stream_inst (
         .clk(clk),
         .rst_n(rst_n),
-        .write_enable(write_enable),
-        .data_pkt({pc, instr}),
+        .write_enable(pc_valid & ~drop_instr),
+        .data_pkt(data_pkt),
         .tlast_interval(tlast_interval),
         .M_AXIS_tvalid(M_AXIS_tvalid),
         .M_AXIS_tready(M_AXIS_tready),

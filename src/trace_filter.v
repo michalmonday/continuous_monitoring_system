@@ -1,6 +1,8 @@
 // This module checks if instruction is not a branch/jump/return.
 // If that's the case, then "drop_instr" is set to 1.
 
+`timescale 1ns/10ps
+
 
 // Observation: first 2 bits of instruction (opcode) indicate whether instruction is compressed (16-bit) or not (32-bit).
 //              If first 2 bits are '11' then instruction is not compressed and has 7-bit opcode.
@@ -38,7 +40,7 @@ module trace_filter //#(
 (
     input clk, //rst_n, 
     input [31:0] instr,
-    output reg drop_instr
+    output wire drop_instr
 );
     // always @(posedge clk) begin
     //     // compressed instructions (16-bit)
@@ -64,32 +66,38 @@ module trace_filter //#(
     //     else begin
     //         drop_instr <= 1'b1;
     //     end
+    // assign drop_instr = instr > 0;
+    assign drop_instr = ~((instr[6:0] == `BRANCH_OPCODE) || 
+                        (instr[6:0] == `JAL_OPCODE) || 
+                        (instr[6:0] == `JALR_OPCODE) ||
+                        (instr[1:0] == `C_BRANCH_OPCODE && instr[15:14] == `C_BRANCH_FUNCT3_2_MSB) ||
+                        (instr[1:0] == `C_JAL_OPCODE && instr[15:13] == `C_JAL_FUNCT3_3_MSB) ||
+                        (instr[1:0] == `C_JALR_OPCODE && instr[15:13] == `C_JALR_FUNCT4_3_MSB));
         
+    // // end
+    // always @(posedge clk) begin
+    //     // compressed instructions (16-bit)
+    //     if (instr[1:0] == `C_BRANCH_OPCODE && instr[15:14] == `C_BRANCH_FUNCT3_2_MSB) begin
+    //         drop_instr <= 1'b0;
+    //     end
+    //     else if (instr[1:0] == `C_JAL_OPCODE && instr[15:13] == `C_JAL_FUNCT3_3_MSB) begin
+    //         drop_instr <= 1'b0;
+    //     end
+    //     else if (instr[1:0] == `C_JALR_OPCODE && instr[15:13] == `C_JALR_FUNCT4_3_MSB) begin
+    //         drop_instr <= 1'b0;
+    //     end
+    //     // not compressed instructions (32-bit)
+    //     else if (instr[6:0] == `BRANCH_OPCODE) begin
+    //         drop_instr <= 1'b0;
+    //     end
+    //     else if (instr[6:0] == `JAL_OPCODE) begin
+    //         drop_instr <= 1'b0;
+    //     end
+    //     else if (instr[6:0] == `JALR_OPCODE) begin
+    //         drop_instr <= 1'b0;
+    //     end
+    //     else begin
+    //         drop_instr <= 1'b1;
+    //     end
     // end
-    always @(instr) begin
-        // compressed instructions (16-bit)
-        if (instr[1:0] == `C_BRANCH_OPCODE && instr[15:14] == `C_BRANCH_FUNCT3_2_MSB) begin
-            drop_instr = 1'b0;
-        end
-        else if (instr[1:0] == `C_JAL_OPCODE && instr[15:13] == `C_JAL_FUNCT3_3_MSB) begin
-            drop_instr = 1'b0;
-        end
-        else if (instr[1:0] == `C_JALR_OPCODE && instr[15:13] == `C_JALR_FUNCT4_3_MSB) begin
-            drop_instr = 1'b0;
-        end
-        // not compressed instructions (32-bit)
-        else if (instr[6:0] == `BRANCH_OPCODE) begin
-            drop_instr = 1'b0;
-        end
-        else if (instr[6:0] == `JAL_OPCODE) begin
-            drop_instr = 1'b0;
-        end
-        else if (instr[6:0] == `JALR_OPCODE) begin
-            drop_instr = 1'b0;
-        end
-        else begin
-            drop_instr = 1'b1;
-        end
-        
-    end
 endmodule
