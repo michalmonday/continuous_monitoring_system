@@ -40,29 +40,55 @@ module trace_filter //#(
     input [31:0] instr,
     output reg drop_instr
 );
-    always @(posedge clk) begin
+    // always @(posedge clk) begin
+    //     // compressed instructions (16-bit)
+    //     if (instr[1:0] == `C_BRANCH_OPCODE && instr[15:14] == `C_BRANCH_FUNCT3_2_MSB) begin
+    //         drop_instr <= 1'b0;
+    //     end
+    //     else if (instr[1:0] == `C_JAL_OPCODE && instr[15:13] == `C_JAL_FUNCT3_3_MSB) begin
+    //         drop_instr <= 1'b0;
+    //     end
+    //     else if (instr[1:0] == `C_JALR_OPCODE && instr[15:13] == `C_JALR_FUNCT4_3_MSB) begin
+    //         drop_instr <= 1'b0;
+    //     end
+    //     // not compressed instructions (32-bit)
+    //     else if (instr[6:0] == `BRANCH_OPCODE) begin
+    //         drop_instr <= 1'b0;
+    //     end
+    //     else if (instr[6:0] == `JAL_OPCODE) begin
+    //         drop_instr <= 1'b0;
+    //     end
+    //     else if (instr[6:0] == `JALR_OPCODE) begin
+    //         drop_instr <= 1'b0;
+    //     end
+    //     else begin
+    //         drop_instr <= 1'b1;
+    //     end
+        
+    // end
+    always @(instr) begin
         // compressed instructions (16-bit)
         if (instr[1:0] == `C_BRANCH_OPCODE && instr[15:14] == `C_BRANCH_FUNCT3_2_MSB) begin
-            drop_instr <= 1'b0;
+            drop_instr = 1'b0;
         end
         else if (instr[1:0] == `C_JAL_OPCODE && instr[15:13] == `C_JAL_FUNCT3_3_MSB) begin
-            drop_instr <= 1'b0;
+            drop_instr = 1'b0;
         end
         else if (instr[1:0] == `C_JALR_OPCODE && instr[15:13] == `C_JALR_FUNCT4_3_MSB) begin
-            drop_instr <= 1'b0;
+            drop_instr = 1'b0;
         end
         // not compressed instructions (32-bit)
         else if (instr[6:0] == `BRANCH_OPCODE) begin
-            drop_instr <= 1'b0;
+            drop_instr = 1'b0;
         end
         else if (instr[6:0] == `JAL_OPCODE) begin
-            drop_instr <= 1'b0;
+            drop_instr = 1'b0;
         end
         else if (instr[6:0] == `JALR_OPCODE) begin
-            drop_instr <= 1'b0;
+            drop_instr = 1'b0;
         end
         else begin
-            drop_instr <= 1'b1;
+            drop_instr = 1'b1;
         end
         
     end
