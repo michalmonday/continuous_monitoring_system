@@ -3,7 +3,17 @@
 `define ADDR_WIDTH 8 // internal addressing (each of 256 addresses can result in a different action upon writing/reading)
 `define DATA_WIDTH 64 // control data width, the functionality of the module is controlled by writing to address+data ports
 
-module dut_continuous_monitoring_system;
+`define ADDR_TRIGGER_TRACE_START_ADDRESS_ENABLED 0
+`define ADDR_TRIGGER_TRACE_END_ADDRESS_ENABLED 1
+`define ADDR_TRIGGER_TRACE_START_ADDRESS 2
+`define ADDR_TRIGGER_TRACE_END_ADDRESS 3
+`define ADDR_MONITORED_ADDRESS_RANGE_LOWER_BOUND_ENABLED 4
+`define ADDR_MONITORED_ADDRESS_RANGE_UPPER_BOUND_ENABLED 5
+`define ADDR_MONITORED_ADDRESS_RANGE_LOWER_BOUND 6
+`define ADDR_MONITORED_ADDRESS_RANGE_UPPER_BOUND 7
+`define ADDR_WFI_REACHED 8
+
+module dut_continuous_monitoring_system_control;
     localparam XLEN = 64;
     localparam AXI_DATA_WIDTH = 64 + 32;
     localparam period = 10;
@@ -14,13 +24,17 @@ module dut_continuous_monitoring_system;
     wire [AXI_DATA_WIDTH-1:0] M_AXIS_tdata;
 
     reg clk=0, rst_n;
-    reg [XLEN-1:0] pc = 4;
+    reg [XLEN-1:0] pc = 'h80000000;
     reg [31:0] instr;
     reg pc_valid=1;
 
     reg [`ADDR_WIDTH-1:0]ctrl_addr = 0;
     reg [`DATA_WIDTH-1:0]ctrl_wdata = 0;
     reg ctrl_write_enable = 0;
+
+
+    // just for simulation
+    reg ctrl_initialized = 0;
 
     continuous_monitoring_system #(
         .XLEN(XLEN),
@@ -48,16 +62,51 @@ module dut_continuous_monitoring_system;
         .ctrl_write_enable(ctrl_write_enable)
     );
 
+
     always 
     begin
         clk = ~clk;
         #clk_period;
     end
 
-    reg [3:0] i = 0;
+    reg [5:0] j = 0;
     always @ (posedge clk) begin
-        pc = pc +4;
-        i = i + 1;
+        if (~ctrl_initialized && j[0] == 1) begin
+            case (j)
+                1: begin
+                    ctrl_addr = `ADDR_TRIGGER_TRACE_START_ADDRESS_ENABLED;
+                    ctrl_wdata = 1;
+                end
+                3: begin
+                    ctrl_addr = `ADDR_TRIGGER_TRACE_END_ADDRESS_ENABLED;
+                    ctrl_wdata = 1;
+                end
+                5: begin
+                    ctrl_addr = `ADDR_TRIGGER_TRACE_START_ADDRESS;
+                    ctrl_wdata = 32'h80000008;
+                end
+                7: begin 
+                    ctrl_addr = `ADDR_TRIGGER_TRACE_END_ADDRESS;
+                    ctrl_wdata = 32'h80000020;
+                end
+                17: begin
+                    ctrl_initialized = 1;
+                end
+            endcase
+            ctrl_write_enable = 1;
+        end
+        else begin
+            ctrl_write_enable = 0;
+        end
+        j = j + 1;
+    end
+
+    reg [4:0] i = 0;
+    always @ (posedge clk) begin
+        if (ctrl_initialized) begin
+            pc = pc + 4;
+            i = i + 1;
+        end 
         case (i)
             0: instr = 32'h00000000; // nop
             1: instr = 32'h0000006f; // riscv branch instruction
@@ -82,26 +131,4 @@ module dut_continuous_monitoring_system;
             default: instr = 32'h00000000; // nop
         endcase
     end
-
-
-// module continuous_monitoring_system #(
-//     parameter XLEN = 64,
-//     parameter AXI_DATA_WIDTH = XLEN + 32
-//     //parameter ADDR_WIDTH = 4 // internal addressing (each of 16 addresses can result in a different action upon writing/reading)
-// ) (
-//     input clk, rst_n, 
-//     // input [ADDR_WIDTH-1:0] addr,
-//     // input [DATA_WIDTH-1:0] data
-//     input [31:0] instr,
-//     input [XLEN-1:0] pc,
-//     input pc_valid,
-    
-//     // MASTER AXI (supplies data packet to FIFO)
-//     output reg M_AXIS_tvalid,
-//     input M_AXIS_tready,
-//     output reg [DATA_WIDTH-1:0] M_AXIS_tdata,
-//     output reg M_AXIS_tlast,
-//     input [31:0] tlast_interval // number of items in FIFO after which tlast is asserted
-// );
-
 endmodule
