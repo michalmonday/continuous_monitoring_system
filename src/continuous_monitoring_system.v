@@ -59,7 +59,7 @@ module continuous_monitoring_system #(
     reg monitored_address_range_upper_bound_enabled = 0;
     reg [XLEN-1:0] monitored_address_range_lower_bound = 0;
     reg [XLEN-1:0] monitored_address_range_upper_bound = -1;
-    wire is_pc_in_range = (pc >= monitored_address_range_lower_bound) & (pc <= monitored_address_range_upper_bound);
+    // wire is_pc_in_range = (pc >= monitored_address_range_lower_bound) & (pc <= monitored_address_range_upper_bound);
 
     reg trigger_trace_start_address_enabled = 0;
     reg trigger_trace_end_address_enabled = 0;
@@ -89,9 +89,14 @@ module continuous_monitoring_system #(
     // wire M_AXIS_tvalid_override; 
     // assign M_AXIS_tvalid = ~wfi_reached & M_AXIS_tvalid_override;
 
-    wire data_to_axi_write_enable = pc_valid & ~drop_instr & ~wfi_reached & 
-                                    ( (trigger_trace_start_reached | ~trigger_trace_start_address_enabled) &
-                                      (~trigger_trace_end_reached | ~trigger_trace_end_address_enabled) );
+    wire data_to_axi_write_enable = pc_valid &
+                                    ~drop_instr & 
+                                    ~wfi_reached & 
+                                    (trigger_trace_start_reached | ~trigger_trace_start_address_enabled) &
+                                    (~trigger_trace_end_reached | ~trigger_trace_end_address_enabled) &
+                                    (pc >= monitored_address_range_lower_bound | ~monitored_address_range_lower_bound_enabled) &
+                                    (pc <= monitored_address_range_upper_bound | ~monitored_address_range_upper_bound_enabled)
+                                    ;
 
     data_to_axi_stream #(
         .DATA_WIDTH(AXI_DATA_WIDTH) // pc + instr sizes

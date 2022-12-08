@@ -85,6 +85,26 @@ module dut_continuous_monitoring_system_control;
                     ctrl_addr = `ADDR_TRIGGER_TRACE_START_ADDRESS;
                     ctrl_wdata = 32'h80000008;
                 end
+                7: begin 
+                     ctrl_addr = `ADDR_TRIGGER_TRACE_END_ADDRESS;
+                     ctrl_wdata = 32'h80000040;
+                end
+                9: begin 
+                     ctrl_addr = `ADDR_MONITORED_ADDRESS_RANGE_LOWER_BOUND_ENABLED;
+                     ctrl_wdata = 1;
+                end
+                11: begin 
+                     ctrl_addr = `ADDR_MONITORED_ADDRESS_RANGE_UPPER_BOUND_ENABLED;
+                     ctrl_wdata = 1;
+                end
+                13: begin
+                    ctrl_addr = `ADDR_MONITORED_ADDRESS_RANGE_LOWER_BOUND;
+                    ctrl_wdata = 32'h80000012;
+                end
+                15: begin 
+                     ctrl_addr = `ADDR_MONITORED_ADDRESS_RANGE_UPPER_BOUND;
+                     ctrl_wdata = 32'h80000030;
+                end
                 // 7: begin 
                 //     ctrl_addr = `ADDR_TRIGGER_TRACE_END_ADDRESS;
                 //     ctrl_wdata = 32'h80000020;
