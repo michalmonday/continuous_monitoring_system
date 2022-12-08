@@ -86,9 +86,6 @@ module continuous_monitoring_system #(
 
     wire [AXI_DATA_WIDTH-1:0]data_pkt = {pc, instr};
 
-    // wire M_AXIS_tvalid_override; 
-    // assign M_AXIS_tvalid = ~wfi_reached & M_AXIS_tvalid_override;
-
     wire data_to_axi_write_enable = pc_valid &
                                     ~drop_instr & 
                                     ~wfi_reached & 
@@ -108,7 +105,6 @@ module continuous_monitoring_system #(
         .tlast_interval(tlast_interval),
         .force_tlast(instr == `WFI_INSTRUCTION),
         .M_AXIS_tvalid(M_AXIS_tvalid),
-        // .M_AXIS_tvalid(M_AXIS_tvalid_override),
         .M_AXIS_tready(M_AXIS_tready),
         .M_AXIS_tdata(M_AXIS_tdata),
         .M_AXIS_tlast(M_AXIS_tlast)
@@ -159,17 +155,11 @@ module continuous_monitoring_system #(
             end
 
 
-// `define ADDR_TRIGGER_TRACE_START_ADDRESS_ENABLED 0
-// `define ADDR_TRIGGER_TRACE_END_ADDRESS_ENABLED 1
-// `define ADDR_TRIGGER_TRACE_START_ADDRESS 2
-// `define ADDR_TRIGGER_TRACE_END_ADDRESS 3
-// `define ADDR_MONITORED_ADDRESS_RANGE_LOWER_BOUND_ENABLED 4
-// `define ADDR_MONITORED_ADDRESS_RANGE_UPPER_BOUND_ENABLED 5
-// `define ADDR_MONITORED_ADDRESS_RANGE_LOWER_BOUND 6
-// `define ADDR_MONITORED_ADDRESS_RANGE_UPPER_BOUND 7
-// `define ADDR_WFI_REACHED 8
+
+            // if write enable is active (posedge/level triggered mode can be selected by CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED)
             if ((CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED & ctrl_write_enable_pos_edge) || (~CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED & ctrl_write_enable)) begin
                 case(ctrl_addr)
+                    // trace trigger enables and addresses (must match the current PC exactly to trigger)
                     `ADDR_TRIGGER_TRACE_START_ADDRESS_ENABLED: begin
                         trigger_trace_start_address_enabled <= ctrl_wdata;
                     end 
@@ -183,6 +173,7 @@ module continuous_monitoring_system #(
                         trigger_trace_end_address <= ctrl_wdata;
                     end
 
+                    // monitored address range (must be within the range to collect trace)
                     `ADDR_MONITORED_ADDRESS_RANGE_LOWER_BOUND_ENABLED: begin
                         monitored_address_range_lower_bound_enabled <= ctrl_wdata;
                     end
@@ -196,6 +187,7 @@ module continuous_monitoring_system #(
                         monitored_address_range_upper_bound <= ctrl_wdata;
                     end
 
+                    // WFI reached can be used to reset (it is reset anyway after loading Overlay again)
                     `ADDR_WFI_REACHED: begin
                         wfi_reached <= ctrl_wdata;
                     end
