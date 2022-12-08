@@ -1,5 +1,5 @@
 // This file is a modified version of a "pc_stream.v" file from:
-// https://github.com/Byteahalf/riscv_online_debug
+// https://github.com/Byteahalf/riscv_online_debug/blob/master/RISCV/component/pc_stream.v
 // Originally created by Jiacheng Zhu
 
 `timescale 1ns/10ps
@@ -35,7 +35,7 @@ module data_to_axi_stream #(
     wire [DATA_WIDTH-1:0] fifo_dout;
     wire fifo_empty;
     reg axis_stage = 0;
-    reg [32:0] item_counter = 0;
+    reg [31:0] item_counter = 0;
 
     always @(posedge clk) begin
         if(!rst_n) begin
