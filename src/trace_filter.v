@@ -33,6 +33,8 @@
 `define C_JALR_FUNCT4_3_MSB 3'b100
 
 
+`define WFI_INSTRUCTION 16`h0001
+
 module trace_filter //#(
     // parameter DATA_WIDTH = 64, // arbitrary value
     // parameter ADDR_WIDTH = 4 // internal addressing (each of 16 addresses can result in a different action upon writing/reading)
@@ -72,7 +74,9 @@ module trace_filter //#(
                         (instr[6:0] == `JALR_OPCODE) ||
                         (instr[1:0] == `C_BRANCH_OPCODE && instr[15:14] == `C_BRANCH_FUNCT3_2_MSB) ||
                         (instr[1:0] == `C_JAL_OPCODE && instr[15:13] == `C_JAL_FUNCT3_3_MSB) ||
-                        (instr[1:0] == `C_JALR_OPCODE && instr[15:13] == `C_JALR_FUNCT4_3_MSB));
+                        (instr[1:0] == `C_JALR_OPCODE && instr[15:13] == `C_JALR_FUNCT4_3_MSB) || 
+                        (instr[15:0] == `WFI_INSTRUCTION)
+                        );
         
     // // end
     // always @(posedge clk) begin

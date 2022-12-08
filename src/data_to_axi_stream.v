@@ -4,6 +4,7 @@
 
 `timescale 1ns/10ps
 
+
 module data_to_axi_stream #(
     parameter DATA_WIDTH = 1024
 ) (
@@ -13,6 +14,8 @@ module data_to_axi_stream #(
     input [DATA_WIDTH-1:0]data_pkt,
     // number of items passed through until tlast is set high
     input [31:0] tlast_interval, 
+    // force_tlast sets tlast = 1 for the currently added item regardless of tlast_interval and resets tlast_interval counter
+    input force_tlast,
     // allows to use 2 different outputs independently
     // 0 = M_AXIS_tvalid_2 is never HIGH
     // 1 = M_AXIS_tvalid is never HIGH
@@ -21,6 +24,7 @@ module data_to_axi_stream #(
     input M_AXIS_tready,
     output reg [DATA_WIDTH-1:0] M_AXIS_tdata=0,
     output reg M_AXIS_tlast=0
+
     // output reg M_AXIS_tvalid_2,
     // input M_AXIS_tready_2,
     // output reg [DATA_WIDTH-1:0] M_AXIS_tdata_2,
@@ -52,7 +56,7 @@ module data_to_axi_stream #(
                     // M_AXIS_tvalid_2 <= M_AXIS_select;
                     // M_AXIS_tdata_2 <= fifo_dout;
                     fifo_rden <= 1;
-                    if (item_counter == tlast_interval) begin
+                    if (item_counter == tlast_interval || force_tlast) begin
                         item_counter <= 0;
                         // M_AXIS_tlast <= ~M_AXIS_select;
                         M_AXIS_tlast <= 1;
@@ -92,7 +96,7 @@ module data_to_axi_stream #(
 //    clk, rst_n, write_enable, fifo_rden, data_pkt  
 // //    );
 
-    sync_fifo#(
+    sync_fifo2#(
         .DATA_DEPTH   (32),
         .DATA_WIDTH   (DATA_WIDTH)
     ) fifo (

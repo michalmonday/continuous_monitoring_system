@@ -21,6 +21,8 @@
 // (* always_ready, always_enabled *) method Bit#(Report_Width) tgc_evt_SET_TAG_READ;
 `timescale 1ns/10ps
 
+`define WFI_INSTRUCTION 16`h0001
+
 
 module continuous_monitoring_system #(
     parameter XLEN = 64,
@@ -43,6 +45,11 @@ module continuous_monitoring_system #(
 );
     wire drop_instr;
 
+    // At the end of a program, a "wfi" (wait for interrupt) instruction is executed 
+    // which stops the program from running. This is a good time to stop sending trace
+    // to the FIFO.
+    reg program_finished = 0;
+
     trace_filter trace_filter_inst (
         .clk(clk),
         .instr(instr),
@@ -59,10 +66,25 @@ module continuous_monitoring_system #(
         .write_enable(pc_valid & ~drop_instr),
         .data_pkt(data_pkt),
         .tlast_interval(tlast_interval),
+        .force_tlast(instr == `WFI_INSTRUCTION),
         .M_AXIS_tvalid(M_AXIS_tvalid),
         .M_AXIS_tready(M_AXIS_tready),
         .M_AXIS_tdata(M_AXIS_tdata),
         .M_AXIS_tlast(M_AXIS_tlast)
     );
+
+    always @(posedge clk) begin
+        if (rst_n == 0) begin
+            program_finished <= 0;
+        end
+        else begin
+            if (instr == `WFI_INSTRUCTION) begin
+                program_finished <= 1;
+            end
+            else begin
+                program_finished <= program_finished;
+            end
+        end
+    end
 
 endmodule

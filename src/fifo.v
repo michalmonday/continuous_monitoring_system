@@ -197,7 +197,7 @@ endmodule
 
 
 
-module sync_fifo
+module sync_fifo2
 #(
     parameter DATA_DEPTH = 8,
     parameter DATA_WIDTH = 32

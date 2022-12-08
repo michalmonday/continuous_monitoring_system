@@ -41,7 +41,7 @@ module dut_continuous_monitoring_system;
     always @ (posedge clk) begin
         pc = pc +4;
         i = i + 1;
-        case (i)
+        case (i))
             0: instr = 32'h00000000; // nop
             1: instr = 32'h0000006f; // riscv branch instruction
             2: instr = 32'b1100011000000001000001100011; // blt     a0, a1, .LBB0_2
@@ -52,6 +52,16 @@ module dut_continuous_monitoring_system;
             7: instr = 32'h00000000; // nop
             8: instr = 32'h0000006f; // riscv branch instruction
             9: instr = 32'b1100011000000001000001100011; // blt     a0, a1, .LBB0_2
+            10: instr = 32'h00000001; // WFI
+            11: instr = 32'h0000006f; // riscv branch instruction
+            12: instr = 32'b1100011000000001000001100011; // blt     a0, a1, .LBB0_2
+            13: instr = 32'h00000067; // riscv jalr instruction
+            14: instr = 32'h00000000; // nop
+            15: instr = 32'h000000ef; // riscv jal instruction
+            16: instr = 32'b00000000000100110000000000010011; // addi t0, t1, 10
+            17: instr = 32'h00000000; // nop
+            18: instr = 32'h0000006f; // riscv branch instruction
+            19: instr = 32'b1100011000000001000001100011; // blt     a0, a1, .LBB0_2
             default: instr = 32'h00000000; // nop
         endcase
     end
