@@ -86,24 +86,48 @@ module continuous_monitoring_system #(
 
     wire [AXI_DATA_WIDTH-1:0]data_pkt = {pc, instr};
 
-    wire M_AXIS_tvalid_override; 
-    assign M_AXIS_tvalid = ~wfi_reached & M_AXIS_tvalid_override;
+    // wire M_AXIS_tvalid_override; 
+    // assign M_AXIS_tvalid = ~wfi_reached & M_AXIS_tvalid_override;
+
+    wire data_to_axi_write_enable = pc_valid & ~drop_instr & ~wfi_reached & 
+                                    ( (trigger_trace_start_reached | ~trigger_trace_start_address_enabled) &
+                                      (~trigger_trace_end_reached | ~trigger_trace_end_address_enabled) );
 
     data_to_axi_stream #(
         .DATA_WIDTH(AXI_DATA_WIDTH) // pc + instr sizes
     ) data_to_axi_stream_inst (
         .clk(clk),
         .rst_n(rst_n),
-        .write_enable(pc_valid & ~drop_instr & ~wfi_reached),
+        .write_enable(data_to_axi_write_enable),
         .data_pkt(data_pkt),
         .tlast_interval(tlast_interval),
         .force_tlast(instr == `WFI_INSTRUCTION),
-        .M_AXIS_tvalid(M_AXIS_tvalid_override),
+        .M_AXIS_tvalid(M_AXIS_tvalid),
+        // .M_AXIS_tvalid(M_AXIS_tvalid_override),
         .M_AXIS_tready(M_AXIS_tready),
         .M_AXIS_tdata(M_AXIS_tdata),
         .M_AXIS_tlast(M_AXIS_tlast)
     );
 
+
+    always @(posedge clk) begin
+        if (rst_n == 0) begin
+        end
+        else begin
+            if trigger_trace_start_address_enabled & (pc == trigger_trace_start_address) begin
+                trigger_trace_start_reached <= 1;
+                trigger_trace_end_reached <= 0;
+                $display("trigger_trace_start_address (%H) reached", trigger_trace_start_address);
+            end
+            if trigger_trace_end_address_enabled & (pc == trigger_trace_end_address) begin
+                trigger_trace_end_reached <= 1;
+                trigger_trace_start_reached <= 0;
+                $display("trigger_trace_end_address (%H) reached", trigger_trace_end_address);
+            end
+        end
+    end
+
+    // control registers setting
     always @(posedge clk) begin
         if (rst_n == 0) begin
             // whole module status is reset (even if it was previously set through "ctrl_addr" and "ctrl_data")
