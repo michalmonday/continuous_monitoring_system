@@ -58,16 +58,19 @@ module continuous_monitoring_system #(
 
     wire [AXI_DATA_WIDTH-1:0]data_pkt = {pc, instr};
 
+    wire M_AXIS_tvalid_override; 
+    assign M_AXIS_tvalid = ~program_finished & M_AXIS_tvalid_override;
+
     data_to_axi_stream #(
         .DATA_WIDTH(AXI_DATA_WIDTH) // pc + instr sizes
     ) data_to_axi_stream_inst (
         .clk(clk),
         .rst_n(rst_n),
-        .write_enable(pc_valid & ~drop_instr),
+        .write_enable(pc_valid & ~drop_instr & ~program_finished),
         .data_pkt(data_pkt),
         .tlast_interval(tlast_interval),
         .force_tlast(instr == `WFI_INSTRUCTION),
-        .M_AXIS_tvalid(M_AXIS_tvalid),
+        .M_AXIS_tvalid(M_AXIS_tvalid_override),
         .M_AXIS_tready(M_AXIS_tready),
         .M_AXIS_tdata(M_AXIS_tdata),
         .M_AXIS_tlast(M_AXIS_tlast)
