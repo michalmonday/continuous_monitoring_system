@@ -85,10 +85,10 @@ module dut_continuous_monitoring_system_control;
                     ctrl_addr = `ADDR_TRIGGER_TRACE_START_ADDRESS;
                     ctrl_wdata = 32'h80000008;
                 end
-                7: begin 
-                    ctrl_addr = `ADDR_TRIGGER_TRACE_END_ADDRESS;
-                    ctrl_wdata = 32'h80000020;
-                end
+                // 7: begin 
+                //     ctrl_addr = `ADDR_TRIGGER_TRACE_END_ADDRESS;
+                //     ctrl_wdata = 32'h80000020;
+                // end
                 17: begin
                     ctrl_initialized = 1;
                 end
@@ -110,24 +110,24 @@ module dut_continuous_monitoring_system_control;
         case (i)
             0: instr = 32'h00000000; // nop
             1: instr = 32'h0000006f; // riscv branch instruction
-            2: instr = 32'b1100011000000001000001100011; // blt     a0, a1, .LBB0_2
+            2: instr = 32'h0C601063; // blt     a0, a1, .LBB0_2
             3: instr = 32'h00000067; // riscv jalr instruction
             4: instr = 32'h00000000; // nop
             5: instr = 32'h000000ef; // riscv jal instruction
-            6: instr = 32'b00000000000100110000000000010011; // addi t0, t1, 10
+            6: instr = 32'h00130013; // addi t0, t1, 10
             7: instr = 32'h00000000; // nop
             8: instr = 32'h0000006f; // riscv branch instruction
-            9: instr = 32'b1100011000000001000001100011; // blt     a0, a1, .LBB0_2
-            10: instr = 32'h00000001; // WFI
+            9: instr = 32'h0C601063; // blt     a0, a1, .LBB0_2
+            // 10: instr = 32'h00000001; // WFI
             11: instr = 32'h0000006f; // riscv branch instruction
-            12: instr = 32'b1100011000000001000001100011; // blt     a0, a1, .LBB0_2
+            12: instr = 32'h0C601063; // blt     a0, a1, .LBB0_2
             13: instr = 32'h00000067; // riscv jalr instruction
             14: instr = 32'h00000000; // nop
             15: instr = 32'h000000ef; // riscv jal instruction
-            16: instr = 32'b00000000000100110000000000010011; // addi t0, t1, 10
+            16: instr = 32'h00130013; // addi t0, t1, 10
             17: instr = 32'h00000000; // nop
             18: instr = 32'h0000006f; // riscv branch instruction
-            19: instr = 32'b1100011000000001000001100011; // blt     a0, a1, .LBB0_2
+            19: instr = 32'h0C601063; // blt     a0, a1, .LBB0_2
             default: instr = 32'h00000000; // nop
         endcase
     end
