@@ -114,12 +114,12 @@ module continuous_monitoring_system #(
         if (rst_n == 0) begin
         end
         else begin
-            if trigger_trace_start_address_enabled & (pc == trigger_trace_start_address) begin
+            if (trigger_trace_start_address_enabled & (pc == trigger_trace_start_address)) begin
                 trigger_trace_start_reached <= 1;
                 trigger_trace_end_reached <= 0;
                 $display("trigger_trace_start_address (%H) reached", trigger_trace_start_address);
             end
-            if trigger_trace_end_address_enabled & (pc == trigger_trace_end_address) begin
+            if (trigger_trace_end_address_enabled & (pc == trigger_trace_end_address)) begin
                 trigger_trace_end_reached <= 1;
                 trigger_trace_start_reached <= 0;
                 $display("trigger_trace_end_address (%H) reached", trigger_trace_end_address);
