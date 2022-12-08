@@ -28,7 +28,7 @@ module dut_continuous_monitoring_system;
         .M_AXIS_tready(M_AXIS_tready),
         .M_AXIS_tdata(M_AXIS_tdata),
         .M_AXIS_tlast(M_AXIS_tlast),
-        .tlast_interval(3)
+        .tlast_interval(100)
     );
 
     always 
@@ -41,7 +41,7 @@ module dut_continuous_monitoring_system;
     always @ (posedge clk) begin
         pc = pc +4;
         i = i + 1;
-        case (i))
+        case (i)
             0: instr = 32'h00000000; // nop
             1: instr = 32'h0000006f; // riscv branch instruction
             2: instr = 32'b1100011000000001000001100011; // blt     a0, a1, .LBB0_2

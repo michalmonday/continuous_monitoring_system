@@ -21,7 +21,7 @@
 // (* always_ready, always_enabled *) method Bit#(Report_Width) tgc_evt_SET_TAG_READ;
 `timescale 1ns/10ps
 
-`define WFI_INSTRUCTION 16`h0001
+`define WFI_INSTRUCTION 'h0001
 
 
 module continuous_monitoring_system #(
