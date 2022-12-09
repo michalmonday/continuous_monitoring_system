@@ -66,7 +66,7 @@ module continuous_monitoring_system #(
     reg [XLEN-1:0] trigger_trace_start_address = 0;
     reg [XLEN-1:0] trigger_trace_end_address = -1;
     reg trigger_trace_start_reached = 0;
-    reg trigger_trace_end_reached = 1;
+    reg trigger_trace_end_reached = 0;
 
     // edge detector allows to detect pos/neg edges of a write enable signal
     // this is useful when this module is controlled by AXI GPIO from Python
@@ -115,12 +115,12 @@ module continuous_monitoring_system #(
         if (rst_n == 0) begin
         end
         else begin
-            if (trigger_trace_start_address_enabled & (pc == trigger_trace_start_address)) begin
+            if (trigger_trace_start_address_enabled && (pc == trigger_trace_start_address)) begin
                 trigger_trace_start_reached <= 1;
                 trigger_trace_end_reached <= 0;
                 $display("trigger_trace_start_address (%H) reached", trigger_trace_start_address);
             end
-            if (trigger_trace_end_address_enabled & (pc == trigger_trace_end_address)) begin
+            if (trigger_trace_end_address_enabled && (pc == trigger_trace_end_address)) begin
                 trigger_trace_end_reached <= 1;
                 trigger_trace_start_reached <= 0;
                 $display("trigger_trace_end_address (%H) reached", trigger_trace_end_address);
@@ -144,7 +144,7 @@ module continuous_monitoring_system #(
             trigger_trace_start_address <= 0;
             trigger_trace_end_address <= -1;
             trigger_trace_start_reached <= 0;
-            trigger_trace_end_reached <= 1;
+            trigger_trace_end_reached <= 0;
         end
         else begin
             if (instr == `WFI_INSTRUCTION) begin
@@ -153,7 +153,6 @@ module continuous_monitoring_system #(
             else begin
                 wfi_reached <= wfi_reached;
             end
-
 
 
             // if write enable is active (posedge/level triggered mode can be selected by CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED)
