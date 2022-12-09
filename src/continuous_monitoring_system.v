@@ -111,22 +111,22 @@ module continuous_monitoring_system #(
     );
 
 
-    always @(posedge clk) begin
-        if (rst_n == 0) begin
-        end
-        else begin
-            if (trigger_trace_start_address_enabled && (pc == trigger_trace_start_address)) begin
-                trigger_trace_start_reached <= 1;
-                trigger_trace_end_reached <= 0;
-                $display("trigger_trace_start_address (%H) reached", trigger_trace_start_address);
-            end
-            if (trigger_trace_end_address_enabled && (pc == trigger_trace_end_address)) begin
-                trigger_trace_end_reached <= 1;
-                trigger_trace_start_reached <= 0;
-                $display("trigger_trace_end_address (%H) reached", trigger_trace_end_address);
-            end
-        end
-    end
+    // always @(posedge clk) begin
+    //     if (rst_n == 0) begin
+    //     end
+    //     else begin
+    //         if (trigger_trace_start_address_enabled && (pc == trigger_trace_start_address)) begin
+    //             trigger_trace_start_reached <= 1;
+    //             trigger_trace_end_reached <= 0;
+    //             $display("trigger_trace_start_address (%H) reached", trigger_trace_start_address);
+    //         end
+    //         if (trigger_trace_end_address_enabled && (pc == trigger_trace_end_address)) begin
+    //             trigger_trace_end_reached <= 1;
+    //             trigger_trace_start_reached <= 0;
+    //             $display("trigger_trace_end_address (%H) reached", trigger_trace_end_address);
+    //         end
+    //     end
+    // end
 
     // control registers setting
     always @(posedge clk) begin
@@ -150,10 +150,6 @@ module continuous_monitoring_system #(
             if (instr == `WFI_INSTRUCTION) begin
                 wfi_reached <= 1;
             end
-            else begin
-                wfi_reached <= wfi_reached;
-            end
-
 
             // if write enable is active (posedge/level triggered mode can be selected by CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED)
             if ((CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED & ctrl_write_enable_pos_edge) || (~CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED & ctrl_write_enable)) begin
@@ -195,6 +191,18 @@ module continuous_monitoring_system #(
                         // do nothing
                     end
                 endcase
+            end
+            else begin
+                if (trigger_trace_start_address_enabled && (pc == trigger_trace_start_address)) begin
+                    trigger_trace_start_reached <= 1;
+                    trigger_trace_end_reached <= 0;
+                    $display("trigger_trace_start_address (%H) reached", trigger_trace_start_address);
+                end
+                if (trigger_trace_end_address_enabled && (pc == trigger_trace_end_address)) begin
+                    trigger_trace_end_reached <= 1;
+                    trigger_trace_start_reached <= 0;
+                    $display("trigger_trace_end_address (%H) reached", trigger_trace_end_address);
+                end
             end
         end
     end
