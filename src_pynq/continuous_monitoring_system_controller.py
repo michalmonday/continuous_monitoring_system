@@ -34,31 +34,39 @@ class ContinuousMonitoringSystemController:
     ADDR_WFI_REACHED = 8
 
     def __init__(self, axi_gpio):
-        self.axi_gpio = axi_gpio
+        # self.axi_gpio = axi_gpio
+        self.sr_data_input = axi_gpio[0:16]
+        self.sr_shift_signal = axi_gpio[16]
+        self.ctrl_addr = axi_gpio[17:25]
+        self.ctrl_write_enable = axi_gpio[25]
+
+    def set_ctrl_wdata(self, value):
+        for i in reversed(range(4)):
+            # shift bits signal = low
+            self.sr_shift_signal.write(0)
+            # write LSB first
+            self.sr_data_input.write((value >> (i * 16)) & 0xFFFF)
+            # shift signal = high (posedge activated)
+            self.sr_shift_signal.write(1)
 
     def send_data_to_cms(self, data, address):
-        ''' Single AXI GPIO block is used to interact with CMS module "ctrl" inputs having 73 bits.
-            For that reason a shift register is used. It takes 16 bit data input, 1 shift signal (posedge activated), 
-            and outputs 64 bits to "ctrl_wdata" CMS module. GPIO maps to:
+        ''' Single AXI GPIO block is used to interact with control inputs ("ctrl") of CMS module having 73 bits.
+            For that reason a shift register is used. It has 16 bit data input and 1 shift signal (posedge activated), 
+            and outputs 64 bits to "ctrl_wdata" of the CMS module. The AXI GPIO maps to:
                 0-15  : shift register input bits (16 bits)
                 16    : shift register shift signal
-                14-24 : "ctrl_addr" of CMS module (8 bits)
+                17-24 : "ctrl_addr" of CMS module (8 bits)
                 25    : "ctrl_write_enable" of CMS module
         '''
         # write enable = low
-        self.axi_gpio[25].write(0)
+        self.ctrl_write_enable.write(0)
         # write address
-        self.axi_gpio[14:25].write(address)
-        # send data through shift register 
+        self.ctrl_addr.write(address)
+        # send ctrl_wdata (64-bits) through shift register (16 bits at a time)
         # (send 4 * 16 bits, resulting in 64bit ctrl_wdata input of CMS module)
-        for i in range(4):
-            # shift bits signal = low
-            self.axi_gpio[16].write(0)
-            # write LSB first
-            to_send = (data >> (i * 16)) & 0xFFFF
-            self.axi_gpio[0:16].write(to_send)
-            # shift signal = high (posedge activated)
-            self.axi_gpio[16].write(1)
+        self.set_ctrl_wdata(data)
+        self.ctrl_write_enable.write(1)
+        self.ctrl_write_enable.write(0)
     
     ###############################################
     # Trigger control functions (start/stop trace when certain program counter value is executed)
