@@ -66,7 +66,7 @@ module continuous_monitoring_system #(
     reg [XLEN-1:0] trigger_trace_start_address = 0;
     reg [XLEN-1:0] trigger_trace_end_address = -1;
     reg trigger_trace_start_reached = 0;
-    reg trigger_trace_end_reached = 0;
+    reg trigger_trace_end_reached = 1;
 
     // edge detector allows to detect pos/neg edges of a write enable signal
     // this is useful when this module is controlled by AXI GPIO from Python
@@ -144,7 +144,7 @@ module continuous_monitoring_system #(
             trigger_trace_start_address <= 0;
             trigger_trace_end_address <= -1;
             trigger_trace_start_reached <= 0;
-            trigger_trace_end_reached <= 0;
+            trigger_trace_end_reached <= 1;
         end
         else begin
             if (instr == `WFI_INSTRUCTION) begin
