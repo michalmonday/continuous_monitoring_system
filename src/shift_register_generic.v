@@ -9,7 +9,7 @@ module shift_register_generic
     output [DATA_OUTPUT_WIDTH-1:0] data_out
     );
     reg [DATA_OUTPUT_WIDTH-1:0] r_data_out = 0;
-    assign data = r_data_out;
+    assign data_out = r_data_out;
     always @(posedge shift)
     begin
         r_data_out <= (r_data_out << DATA_INPUT_WIDTH) | data_in;
