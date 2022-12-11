@@ -70,8 +70,8 @@ module dut_continuous_monitoring_system;
             8: instr = 32'h0000006f; // riscv branch instruction
             9: instr = 32'h0C601063; // blt     a0, a1, .LBB0_2
 
-            10: instr = 32'h00000001; // WFI
-            11: instr = 32'h00000001; // WFI
+            10: instr = 32'h10500073 // WFI (wait for interrupt)
+            11: instr = 32'h10500073 // WFI (wait for interrupt)
 
             12: instr = 32'h0000006f; // riscv branch instruction
             13: instr = 32'h0C601063; // blt     a0, a1, .LBB0_2

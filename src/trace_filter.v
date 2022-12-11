@@ -33,7 +33,7 @@
 `define C_JALR_FUNCT4_3_MSB 3'b100
 
 
-`define WFI_INSTRUCTION 'h0001
+`define WFI_INSTRUCTION 'h10500073
 
 module trace_filter //#(
     // parameter DATA_WIDTH = 64, // arbitrary value

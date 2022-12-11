@@ -6,7 +6,7 @@
 
 `timescale 1ns/10ps
 
-`define WFI_INSTRUCTION 'h0001
+`define WFI_INSTRUCTION 'h10500073
 
 `define ADDR_WIDTH 8 // internal addressing (each of 256 addresses can result in a different action upon writing/reading)
 `define DATA_WIDTH 64 // control data width, the functionality of the module is controlled by writing to address+data ports
