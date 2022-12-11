@@ -19,7 +19,7 @@
 `define ADDR_MONITORED_ADDRESS_RANGE_UPPER_BOUND_ENABLED 5
 `define ADDR_MONITORED_ADDRESS_RANGE_LOWER_BOUND 6
 `define ADDR_MONITORED_ADDRESS_RANGE_UPPER_BOUND 7
-`define ADDR_WFI_REACHED 8
+`define ADDR_wfi_stop 8
 
 module continuous_monitoring_system #(
     parameter XLEN = 64,
@@ -52,7 +52,7 @@ module continuous_monitoring_system #(
     // At the end of a program, a "wfi" (wait for interrupt) instruction is executed 
     // which stops the program from running. This is a good time to stop sending trace
     // to the FIFO.
-    reg wfi_reached = 0;
+    reg [1:0]wfi_stop = 0; // it is 2 bits to use it as a counter and control write enable only based on MSB (to delay disabling write by 1 cycle)
 
     // monitored address range
     reg monitored_address_range_lower_bound_enabled = 0;
@@ -88,7 +88,7 @@ module continuous_monitoring_system #(
 
     wire data_to_axi_write_enable = pc_valid &
                                     ~drop_instr & 
-                                    ~wfi_reached & 
+                                    (wfi_stop < 2) & 
                                     (trigger_trace_start_reached | ~trigger_trace_start_address_enabled) &
                                     (~trigger_trace_end_reached | ~trigger_trace_end_address_enabled) &
                                     (pc >= monitored_address_range_lower_bound | ~monitored_address_range_lower_bound_enabled) &
@@ -103,7 +103,8 @@ module continuous_monitoring_system #(
         .write_enable(data_to_axi_write_enable),
         .data_pkt(data_pkt),
         .tlast_interval(tlast_interval),
-        .force_tlast(instr == `WFI_INSTRUCTION),
+        //.force_tlast(instr == `WFI_INSTRUCTION),
+        .tlast(instr == `WFI_INSTRUCTION),
         .M_AXIS_tvalid(M_AXIS_tvalid),
         .M_AXIS_tready(M_AXIS_tready),
         .M_AXIS_tdata(M_AXIS_tdata),
@@ -132,7 +133,7 @@ module continuous_monitoring_system #(
     always @(posedge clk) begin
         if (rst_n == 0) begin
             // whole module status is reset (even if it was previously set through "ctrl_addr" and "ctrl_data")
-            wfi_reached <= 0;
+            wfi_stop <= 0;
 
             monitored_address_range_lower_bound_enabled <= 0;
             monitored_address_range_upper_bound_enabled <= 0;
@@ -147,8 +148,8 @@ module continuous_monitoring_system #(
             trigger_trace_end_reached <= 0;
         end
         else begin
-            if (instr == `WFI_INSTRUCTION) begin
-                wfi_reached <= 1;
+            if (instr == `WFI_INSTRUCTION && wfi_stop < 2) begin
+                wfi_stop <= wfi_stop + 1;
             end
 
             // if write enable is active (posedge/level triggered mode can be selected by CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED)
@@ -183,8 +184,8 @@ module continuous_monitoring_system #(
                     end
 
                     // WFI reached can be used to reset (it is reset anyway after loading Overlay again)
-                    `ADDR_WFI_REACHED: begin
-                        wfi_reached <= ctrl_wdata;
+                    `ADDR_wfi_stop: begin
+                        wfi_stop <= ctrl_wdata;
                     end
 
                     default: begin
