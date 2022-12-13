@@ -22,6 +22,8 @@ module dut_continuous_monitoring_system;
     reg [`DATA_WIDTH-1:0]ctrl_wdata = 0;
     reg ctrl_write_enable = 0;
 
+    reg en = 1;
+
     continuous_monitoring_system #(
         .XLEN(XLEN),
         .AXI_DATA_WIDTH(AXI_DATA_WIDTH),
