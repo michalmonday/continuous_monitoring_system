@@ -35,6 +35,7 @@ module continuous_monitoring_system #(
     input [XLEN-1:0] pc,
     input pc_valid, // determines whether the current instruction/pc is executed now
 
+
     // axi signals (interfacing with FIFO)
     output wire M_AXIS_tvalid,
     input M_AXIS_tready,
@@ -45,7 +46,11 @@ module continuous_monitoring_system #(
     // control signals (determining operational mode of the continuous_monitoring_system)
     input [`ADDR_WIDTH-1:0] ctrl_addr,
     input [`DATA_WIDTH-1:0] ctrl_wdata,
-    input ctrl_write_enable
+    input ctrl_write_enable,
+
+    // enable the module (if disabled, the module will not send any data to the FIFO)
+    // this may be connected to the GPIO rst_n (the same one used to reset the processor)
+    input en
 );
     wire drop_instr;
 
@@ -86,7 +91,8 @@ module continuous_monitoring_system #(
 
     wire [AXI_DATA_WIDTH-1:0]data_pkt = {pc, instr};
 
-    wire data_to_axi_write_enable = pc_valid &
+    wire data_to_axi_write_enable = en &
+                                    pc_valid &
                                     ~drop_instr & 
                                     (wfi_stop < 2) & 
                                     (trigger_trace_start_reached | ~trigger_trace_start_address_enabled) &
@@ -148,7 +154,7 @@ module continuous_monitoring_system #(
             trigger_trace_end_reached <= 0;
         end
         else begin
-            if (instr == `WFI_INSTRUCTION && wfi_stop < 2) begin
+            if (instr == `WFI_INSTRUCTION && wfi_stop < 2 && en) begin
                 wfi_stop <= wfi_stop + 1;
             end
 
