@@ -33,7 +33,7 @@
 `define C_JALR_FUNCT4_3_MSB 3'b100
 
 
-`define WFI_INSTRUCTION 'h0001
+`define WFI_INSTRUCTION 'h10500073
 
 module trace_filter //#(
     // parameter DATA_WIDTH = 64, // arbitrary value
@@ -75,7 +75,7 @@ module trace_filter //#(
                         (instr[1:0] == `C_BRANCH_OPCODE && instr[15:14] == `C_BRANCH_FUNCT3_2_MSB) ||
                         (instr[1:0] == `C_JAL_OPCODE && instr[15:13] == `C_JAL_FUNCT3_3_MSB) ||
                         (instr[1:0] == `C_JALR_OPCODE && instr[15:13] == `C_JALR_FUNCT4_3_MSB) || 
-                        (instr[15:0] == `WFI_INSTRUCTION)
+                        (instr == `WFI_INSTRUCTION)
                         );
         
     // // end

@@ -36,6 +36,8 @@ module dut_continuous_monitoring_system_control;
     // just for simulation
     reg ctrl_initialized = 0;
 
+    reg en = 1;
+
     continuous_monitoring_system #(
         .XLEN(XLEN),
         .AXI_DATA_WIDTH(AXI_DATA_WIDTH),
@@ -59,7 +61,8 @@ module dut_continuous_monitoring_system_control;
         // control signals (determining operational mode of the continuous_monitoring_system)
         .ctrl_addr(ctrl_addr), 
         .ctrl_wdata(ctrl_wdata), 
-        .ctrl_write_enable(ctrl_write_enable)
+        .ctrl_write_enable(ctrl_write_enable),
+        .en(en)
     );
 
 
