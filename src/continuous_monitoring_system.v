@@ -19,7 +19,7 @@
 `define ADDR_MONITORED_ADDRESS_RANGE_UPPER_BOUND_ENABLED 5
 `define ADDR_MONITORED_ADDRESS_RANGE_LOWER_BOUND 6
 `define ADDR_MONITORED_ADDRESS_RANGE_UPPER_BOUND 7
-`define ADDR_wfi_stop 8
+`define ADDR_WFI_STOP 8
 
 module continuous_monitoring_system #(
     parameter XLEN = 64,
@@ -156,6 +156,9 @@ module continuous_monitoring_system #(
         else begin
             if (instr == `WFI_INSTRUCTION && wfi_stop < 2 && en) begin
                 wfi_stop <= wfi_stop + 1;
+            end 
+            else if (instr != `WFI_INSTRUCTION) begin
+                wfi_stop <= 0;
             end
 
             // if write enable is active (posedge/level triggered mode can be selected by CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED)
@@ -190,7 +193,7 @@ module continuous_monitoring_system #(
                     end
 
                     // WFI reached can be used to reset (it is reset anyway after loading Overlay again)
-                    `ADDR_wfi_stop: begin
+                    `ADDR_WFI_STOP: begin
                         wfi_stop <= ctrl_wdata;
                     end
 
