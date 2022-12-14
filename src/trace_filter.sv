@@ -5,9 +5,7 @@ module trace_filter (
     rst_n,
 
     instr,
-    pc,
-    data_pkt,
-    data_pkt_valid
+    drop_instr
 );
 
     input   logic   clk;
@@ -15,10 +13,7 @@ module trace_filter (
 
     // Instruction data from CPU
     input   logic   [RISC_V_INSTRUCTION_WIDTH - 1 : 0]  instr;
-    input   logic   [XLEN - 1 : 0]  pc;
-
-    output  logic   [DATA_PACKET_WIDTH - 1 : 0] data_pkt = DATA_PACKET_WIDTH'('b0);
-    output  logic                               data_pkt_valid;       
+    output  logic                                       drop_instr;   
 
 
     logic   [RESYNC_TIMER_WIDTH - 1 : 0] resync_timer = RESYNC_TIMER_WIDTH'('b0);
@@ -72,7 +67,7 @@ module trace_filter (
     
     
     // This handles when a resync is triggered
-    assign resync =   resync_timer_event || 
+    assign resync =     resync_timer_event || 
                         branch_event ||
                         jal_event ||
                         jalr_event ||   
@@ -85,16 +80,10 @@ module trace_filter (
     // This handles when data_pkt are sent out of the trace port
     always_ff @(posedge clk) begin : pipeline_stage_2
         if (rst_n == 0) begin
-            data_pkt <= DATA_PACKET_WIDTH'('b0);
+            drop_instr <= 1'b0;
         end else begin
-            if (resync) begin
-                data_pkt <= {instr, pc};
-            end
+            drop_instr <= ~resync;
         end
     end
-
-
-    // Signals that there is a new valid data_pkt
-    assign data_pkt_valid = resync;
 
 endmodule

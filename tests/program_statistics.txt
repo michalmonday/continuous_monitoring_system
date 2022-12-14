@@ -1,0 +1,4 @@
+Number of RISC-V instructions: 132
+Number of branch instructions: 2
+Addresses of branch instructions: ['0x3d', '0x6a']
+Corresponding branch instructions: ['00029663', '00b55663']

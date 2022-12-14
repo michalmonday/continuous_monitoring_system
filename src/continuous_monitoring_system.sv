@@ -10,11 +10,12 @@ import continuous_monitoring_system_pkg::*;
 module continuous_monitoring_system
 (
     input   logic   clk,
-    input   logic   rst_n, 
+    input   logic   rst_n,
 
     // data pkt signals (to be stored in FIFO)
     input   logic   [RISC_V_INSTRUCTION_WIDTH - 1 : 0]  instr,
     input   logic   [XLEN - 1 : 0]                      pc,
+    input   logic                                       pc_valid, // determines whether the current instruction/pc is executed now
 
     // axi signals (interfacing with FIFO)
     output  logic                               M_AXIS_tvalid,
@@ -28,8 +29,8 @@ module continuous_monitoring_system
     input   logic   [CTRL_DATA_WIDTH - 1 : 0]   ctrl_wdata,
     input   logic                               ctrl_write_enable
 );
-    logic [DATA_PACKET_WIDTH - 1 : 0]    data_pkt;
-    logic                                data_pkt_valid;
+    logic [DATA_PACKET_WIDTH - 1 : 0]   data_pkt;
+    logic                               drop_instr;
 
     // At the end of a program, a "wfi" (wait for interrupt) instruction is executed 
     // which stops the program from running. This is a good time to stop sending trace
@@ -54,14 +55,13 @@ module continuous_monitoring_system
         .clk(clk),
         .rst_n(rst_n),
         .instr(instr),
-        .pc(pc),
-        .data_pkt(data_pkt),
-        .data_pkt_valid(data_pkt_valid)
+        .drop_instr(drop_instr)
     );
 
-   
+    assign data_pkt = {pc, instr};
 
-    wire data_to_axi_write_enable = data_pkt_valid & 
+    wire data_to_axi_write_enable = pc_valid &
+                                    ~drop_instr &
                                     ~wfi_reached & 
                                     (trigger_trace_start_reached | ~trigger_trace_start_address_enabled) &
                                     (~trigger_trace_end_reached | ~trigger_trace_end_address_enabled) &
