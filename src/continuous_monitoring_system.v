@@ -159,6 +159,7 @@ module continuous_monitoring_system #(
             trigger_trace_end_reached <= 0;
 
             clk_counter <= 0;
+            last_write_timestamp <= 0;
         end
         else begin
             clk_counter <= clk_counter + 1;
