@@ -32,6 +32,7 @@ class ContinuousMonitoringSystemController:
     ADDR_MONITORED_ADDRESS_RANGE_LOWER_BOUND = 6
     ADDR_MONITORED_ADDRESS_RANGE_UPPER_BOUND = 7
     ADDR_WFI_REACHED = 8
+    ADDR_CLK_COUNTER = 9
 
     def __init__(self, axi_gpio):
         # self.axi_gpio = axi_gpio
@@ -103,3 +104,6 @@ class ContinuousMonitoringSystemController:
     # (btw another way to reset the wfi wait is to load the Overlay 'bit/hwh' again)
     def reset_wfi_wait(self):
         self.send_data_to_cms(0, __class__.ADDR_WFI_REACHED)
+
+    def reset_clk_counter(self):
+        self.send_data_to_cms(0, __class__.ADDR_CLK_COUNTER)
