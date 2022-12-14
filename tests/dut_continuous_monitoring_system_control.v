@@ -15,7 +15,7 @@
 
 module dut_continuous_monitoring_system_control;
     localparam XLEN = 64;
-    localparam AXI_DATA_WIDTH = 64 + 32;
+    localparam AXI_DATA_WIDTH = 64 + 32 + 64;
     localparam period = 10;
     localparam clk_period = 5;
 
@@ -40,7 +40,7 @@ module dut_continuous_monitoring_system_control;
 
     continuous_monitoring_system #(
         .XLEN(XLEN),
-        .AXI_DATA_WIDTH(AXI_DATA_WIDTH),
+//        .AXI_DATA_WIDTH(AXI_DATA_WIDTH),
         .CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED(1)
     ) cms (
         .clk(clk),

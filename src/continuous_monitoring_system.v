@@ -8,8 +8,8 @@
 
 `define WFI_INSTRUCTION 'h10500073
 
-`define ADDR_WIDTH 8 // internal addressing (each of 256 addresses can result in a different action upon writing/reading)
-`define DATA_WIDTH 64 // control data width, the functionality of the module is controlled by writing to address+data ports
+`define CTRL_ADDR_WIDTH 8 // internal addressing (each of 256 addresses can result in a different action upon writing/reading)
+`define CTRL_DATA_WIDTH 64 // control data width, the functionality of the module is controlled by writing to address+data ports
 
 `define ADDR_TRIGGER_TRACE_START_ADDRESS_ENABLED 0
 `define ADDR_TRIGGER_TRACE_END_ADDRESS_ENABLED 1
@@ -20,15 +20,17 @@
 `define ADDR_MONITORED_ADDRESS_RANGE_LOWER_BOUND 6
 `define ADDR_MONITORED_ADDRESS_RANGE_UPPER_BOUND 7
 `define ADDR_WFI_STOP 8
+`define ADDR_CLK_COUNTER 9
+
+`define CLK_COUNTER_WIDTH 64
 
 module continuous_monitoring_system #(
     parameter XLEN = 64,
-    parameter AXI_DATA_WIDTH = XLEN + 32,
+    parameter AXI_DATA_WIDTH = XLEN + 32 + `CLK_COUNTER_WIDTH,
     parameter CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED = 1 // 1 = write enable is pos edge triggered, 0 = write enable is level triggered
-    //parameter ADDR_WIDTH = 4 // internal addressing (each of 16 addresses can result in a different action upon writing/reading)
+    //parameter CTRL_ADDR_WIDTH = 4 // internal addressing (each of 16 addresses can result in a different action upon writing/reading)
 ) (
     input clk, rst_n, 
-    
 
     // data pkt signals (to be stored in FIFO)
     input [31:0] instr,
@@ -44,8 +46,8 @@ module continuous_monitoring_system #(
     input [31:0] tlast_interval, // number of items in FIFO after which tlast is asserted
 
     // control signals (determining operational mode of the continuous_monitoring_system)
-    input [`ADDR_WIDTH-1:0] ctrl_addr,
-    input [`DATA_WIDTH-1:0] ctrl_wdata,
+    input [`CTRL_ADDR_WIDTH-1:0] ctrl_addr,
+    input [`CTRL_DATA_WIDTH-1:0] ctrl_wdata,
     input ctrl_write_enable,
 
     // enable the module (if disabled, the module will not send any data to the FIFO)
@@ -73,6 +75,10 @@ module continuous_monitoring_system #(
     reg trigger_trace_start_reached = 0;
     reg trigger_trace_end_reached = 0;
 
+    reg [`CLK_COUNTER_WIDTH-1:0] clk_counter = 0;
+    reg [`CLK_COUNTER_WIDTH-1:0] last_write_timestamp = 0;
+    wire [`CLK_COUNTER_WIDTH-1:0] clk_counter_delta = clk_counter - last_write_timestamp;
+
     // edge detector allows to detect pos/neg edges of a write enable signal
     // this is useful when this module is controlled by AXI GPIO from Python
     // it can be disabled by setting CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED to 0
@@ -89,7 +95,7 @@ module continuous_monitoring_system #(
         .drop_instr(drop_instr)
     );
 
-    wire [AXI_DATA_WIDTH-1:0]data_pkt = {pc, instr};
+    wire [AXI_DATA_WIDTH-1:0]data_pkt = {instr, clk_counter_delta, pc};
 
     wire data_to_axi_write_enable = en &
                                     pc_valid &
@@ -116,7 +122,6 @@ module continuous_monitoring_system #(
         .M_AXIS_tdata(M_AXIS_tdata),
         .M_AXIS_tlast(M_AXIS_tlast)
     );
-
 
     // always @(posedge clk) begin
     //     if (rst_n == 0) begin
@@ -152,8 +157,16 @@ module continuous_monitoring_system #(
             trigger_trace_end_address <= -1;
             trigger_trace_start_reached <= 0;
             trigger_trace_end_reached <= 0;
+
+            clk_counter <= 0;
+            last_write_timestamp <= 0;
         end
         else begin
+            clk_counter <= clk_counter + 1;
+            if (data_to_axi_write_enable) begin
+                last_write_timestamp <= clk_counter;
+            end 
+
             if (instr == `WFI_INSTRUCTION && wfi_stop < 2 && en) begin
                 wfi_stop <= wfi_stop + 1;
             end 

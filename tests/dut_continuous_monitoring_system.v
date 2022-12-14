@@ -26,7 +26,7 @@ module dut_continuous_monitoring_system;
 
     continuous_monitoring_system #(
         .XLEN(XLEN),
-        .AXI_DATA_WIDTH(AXI_DATA_WIDTH),
+        //.AXI_DATA_WIDTH(AXI_DATA_WIDTH),
         .CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED(1)
     ) cms (
         .clk(clk),
