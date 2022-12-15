@@ -27,7 +27,7 @@
 `define NO_OF_PERFORMANCE_EVENTS 115
 
 // 8 bits allow to store 256 possible values, it could be enough to make them distinct enough for creating the program profile
-`define PERFORMANCE_EVENT_MOD_COUNTER_WIDTH 8
+`define PERFORMANCE_EVENT_MOD_COUNTER_WIDTH 7
 
 module continuous_monitoring_system #(
     parameter XLEN = 64,
@@ -58,7 +58,7 @@ module continuous_monitoring_system #(
     // enable the module (if disabled, the module will not send any data to the FIFO)
     // this may be connected to the GPIO rst_n (the same one used to reset the processor)
     input en,
-    input [NO_OF_PERFORMANCE_EVENTS-1:0]performance_events
+    input [`NO_OF_PERFORMANCE_EVENTS-1:0]performance_events
 );
     wire drop_instr;
 
@@ -85,8 +85,7 @@ module continuous_monitoring_system #(
     reg [`CLK_COUNTER_WIDTH-1:0] last_write_timestamp = 0;
     wire [`CLK_COUNTER_WIDTH-1:0] clk_counter_delta = clk_counter - last_write_timestamp;
 
-    wire [`PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1] performance_event_counters[NO_OF_PERFORMANCE_EVENTS-1:0] = 0;
-    wire performance_counters_rst_n = ~data_to_axi_write_enable && rst_n; // reset upon write to FIFO
+    wire [`NO_OF_PERFORMANCE_EVENTS-1:0] performance_event_counters[`PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0];
 
     // edge detector allows to detect pos/neg edges of a write enable signal
     // this is useful when this module is controlled by AXI GPIO from Python
@@ -104,13 +103,6 @@ module continuous_monitoring_system #(
         .drop_instr(drop_instr)
     );
 
-    performance_event_counters performance_event_counters_inst (
-        .clk(clk),
-        .rst_n(performance_counters_rst_n),
-        .performance_events(performance_events), // input bitmap (each bit is indicating if the corresponding performance event happens now)
-        .performance_event_mod_counters(performance_event_mod_counters)  // output counters
-    );
-
     wire [AXI_DATA_WIDTH-1:0]data_pkt = {instr, clk_counter_delta, pc};
 
     wire data_to_axi_write_enable = en &
@@ -122,6 +114,23 @@ module continuous_monitoring_system #(
                                     (pc >= monitored_address_range_lower_bound | ~monitored_address_range_lower_bound_enabled) &
                                     (pc <= monitored_address_range_upper_bound | ~monitored_address_range_upper_bound_enabled)
                                     ;
+
+    wire performance_counters_rst_n = ~data_to_axi_write_enable & rst_n; // reset upon write to FIFO
+
+    performance_event_counters performance_event_counters_inst (
+        .clk(clk),
+        .rst_n(performance_counters_rst_n),
+        .performance_events(performance_events), // input bitmap (each bit is indicating if the corresponding performance event happens now)
+        .counters(performance_event_counters)  // output counters
+    );
+
+    // performance_event_counters performance_event_counters_inst (
+    //     .clk(clk),
+    //     // .rst_n(performance_counters_rst_n),
+    //     .rst_n(1),
+    //     .performance_events(performance_events), // input bitmap (each bit is indicating if the corresponding performance event happens now)
+    //     .counters(performance_event_counters_out)  // output counters
+    // );
 
     data_to_axi_stream #(
         .DATA_WIDTH(AXI_DATA_WIDTH) // pc + instr sizes
