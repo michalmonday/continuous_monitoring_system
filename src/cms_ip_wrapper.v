@@ -6,11 +6,11 @@ in SystemVerilog. This is just a workaround.
 `define CTRL_ADDR_WIDTH 8 // internal addressing (each of 256 addresses can result in a different action upon writing/reading)
 `define CTRL_DATA_WIDTH 64 // control data width, the functionality of the module is controlled by writing to address+data ports
 `define NO_OF_PERFORMANCE_EVENTS 115
+`define XLEN 64
+`define AXI_DATA_WIDTH 1024
 
 
 module cms_ip_wrapper #(
-    parameter XLEN = 64,
-    parameter AXI_DATA_WIDTH = 1024,//XLEN + 32 + `CLK_COUNTER_WIDTH,
     parameter CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED = 1 // 1 = write enable is pos edge triggered, 0 = write enable is level triggered
     //parameter CTRL_ADDR_WIDTH = 4 // internal addressing (each of 16 addresses can result in a different action upon writing/reading)
 ) (
@@ -24,7 +24,7 @@ module cms_ip_wrapper #(
     // axi signals (interfacing with FIFO)
     output wire M_AXIS_tvalid,
     input M_AXIS_tready,
-    output wire [AXI_DATA_WIDTH-1:0] M_AXIS_tdata,
+    output wire [`AXI_DATA_WIDTH - 1 : 0] M_AXIS_tdata,
     output wire M_AXIS_tlast,
     input [31:0] tlast_interval, // number of items in FIFO after which tlast is asserted
 
@@ -39,7 +39,9 @@ module cms_ip_wrapper #(
     input [`NO_OF_PERFORMANCE_EVENTS-1:0]performance_events
 );
 
-continuous_monitoring_system cms (
+continuous_monitoring_system #(
+    .CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED(1) 
+) cms (
     .clk(clk), .rst_n(rst_n), 
 
     // data pkt signals (to be stored in FIFO)
