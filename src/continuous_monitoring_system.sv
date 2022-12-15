@@ -103,7 +103,41 @@ module continuous_monitoring_system #(
         .drop_instr(drop_instr)
     );
 
-    wire [AXI_DATA_WIDTH-1:0]data_pkt = {performance_event_counters[0], instr, clk_counter_delta, pc};
+    wire [AXI_DATA_WIDTH-1:0]data_pkt = {
+        performance_event_counters[114], performance_event_counters[113], performance_event_counters[112], performance_event_counters[111],
+        performance_event_counters[110], performance_event_counters[109], performance_event_counters[108], performance_event_counters[107],
+        performance_event_counters[106], performance_event_counters[105], performance_event_counters[104], performance_event_counters[103],
+        performance_event_counters[102], performance_event_counters[101], performance_event_counters[100], performance_event_counters[99],
+        performance_event_counters[98], performance_event_counters[97], performance_event_counters[96], performance_event_counters[95],
+        performance_event_counters[94], performance_event_counters[93], performance_event_counters[92], performance_event_counters[91],
+        performance_event_counters[90], performance_event_counters[89], performance_event_counters[88], performance_event_counters[87],
+        performance_event_counters[86], performance_event_counters[85], performance_event_counters[84], performance_event_counters[83],
+        performance_event_counters[82], performance_event_counters[81], performance_event_counters[80], performance_event_counters[79],
+        performance_event_counters[78], performance_event_counters[77], performance_event_counters[76], performance_event_counters[75],
+        performance_event_counters[74], performance_event_counters[73], performance_event_counters[72], performance_event_counters[71],
+        performance_event_counters[70], performance_event_counters[69], performance_event_counters[68], performance_event_counters[67],
+        performance_event_counters[66], performance_event_counters[65], performance_event_counters[64], performance_event_counters[63],
+        performance_event_counters[62], performance_event_counters[61], performance_event_counters[60], performance_event_counters[59],
+        performance_event_counters[58], performance_event_counters[57], performance_event_counters[56], performance_event_counters[55],
+        performance_event_counters[54], performance_event_counters[53], performance_event_counters[52], performance_event_counters[51],
+        performance_event_counters[50], performance_event_counters[49], performance_event_counters[48], performance_event_counters[47],
+        performance_event_counters[46], performance_event_counters[45], performance_event_counters[44], performance_event_counters[43],
+        performance_event_counters[42], performance_event_counters[41], performance_event_counters[40], performance_event_counters[39],
+        performance_event_counters[38], performance_event_counters[37], performance_event_counters[36], performance_event_counters[35],
+        performance_event_counters[34], performance_event_counters[33], performance_event_counters[32], performance_event_counters[31],
+        performance_event_counters[30], performance_event_counters[29], performance_event_counters[28], performance_event_counters[27],
+        performance_event_counters[26], performance_event_counters[25], performance_event_counters[24], performance_event_counters[23],
+        performance_event_counters[22], performance_event_counters[21], performance_event_counters[20], performance_event_counters[19],
+        performance_event_counters[18], performance_event_counters[17], performance_event_counters[16], performance_event_counters[15],
+        performance_event_counters[14], performance_event_counters[13], performance_event_counters[12], performance_event_counters[11],
+        performance_event_counters[10], performance_event_counters[9], performance_event_counters[8], performance_event_counters[7],
+        performance_event_counters[6], performance_event_counters[5], performance_event_counters[4], performance_event_counters[3],
+        performance_event_counters[2], performance_event_counters[1], performance_event_counters[0],
+
+        instr,
+        clk_counter_delta,
+        pc
+        };
 
     wire data_to_axi_write_enable = en &
                                     pc_valid &
