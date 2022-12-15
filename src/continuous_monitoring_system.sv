@@ -63,7 +63,7 @@ module continuous_monitoring_system #(
     reg     [CLK_COUNTER_WIDTH - 1 : 0] last_write_timestamp = 0;
     logic   [CLK_COUNTER_WIDTH - 1 : 0] clk_counter_delta = clk_counter - last_write_timestamp;
 
-    logic [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH - 1 : 0] performance_event_counters[NO_OF_PERFORMANCE_EVENTS - 1 : 0];
+    logic [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH - 1 : 0] performance_event_counters[0 : NO_OF_PERFORMANCE_EVENTS - 1];
 
 
     // edge detector allows to detect pos/neg edges of a write enable signal
