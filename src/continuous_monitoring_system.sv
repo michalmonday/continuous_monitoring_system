@@ -85,7 +85,7 @@ module continuous_monitoring_system #(
     reg [`CLK_COUNTER_WIDTH-1:0] last_write_timestamp = 0;
     wire [`CLK_COUNTER_WIDTH-1:0] clk_counter_delta = clk_counter - last_write_timestamp;
 
-    wire [`NO_OF_PERFORMANCE_EVENTS-1:0] performance_event_counters[`PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0];
+    wire [`PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] performance_event_counters[`NO_OF_PERFORMANCE_EVENTS-1:0];
 
     // edge detector allows to detect pos/neg edges of a write enable signal
     // this is useful when this module is controlled by AXI GPIO from Python
@@ -103,7 +103,7 @@ module continuous_monitoring_system #(
         .drop_instr(drop_instr)
     );
 
-    wire [AXI_DATA_WIDTH-1:0]data_pkt = {instr, clk_counter_delta, pc};
+    wire [AXI_DATA_WIDTH-1:0]data_pkt = {performance_event_counters[0], instr, clk_counter_delta, pc};
 
     wire data_to_axi_write_enable = en &
                                     pc_valid &

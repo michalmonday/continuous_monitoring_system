@@ -8,9 +8,9 @@ module performance_event_counters #(
     input clk, 
     input rst_n,
     input [INPUT_EVENT_BITMAP_WIDTH-1:0] performance_events, // bitmap
-    output wire [INPUT_EVENT_BITMAP_WIDTH-1:0] counters[COUNTER_WIDTH-1:0]
+    output wire [COUNTER_WIDTH-1:0] counters[INPUT_EVENT_BITMAP_WIDTH-1:0]
 );
-    reg [INPUT_EVENT_BITMAP_WIDTH-1:0] r_counters[COUNTER_WIDTH-1:0] = '{COUNTER_WIDTH{0}};
+    reg [COUNTER_WIDTH-1:0] r_counters[INPUT_EVENT_BITMAP_WIDTH-1:0] = '{INPUT_EVENT_BITMAP_WIDTH{0}};
     assign counters = r_counters;
 
     integer i;
