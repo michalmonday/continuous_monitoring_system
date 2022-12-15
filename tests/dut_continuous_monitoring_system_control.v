@@ -15,7 +15,7 @@
 
 module dut_continuous_monitoring_system_control;
     localparam XLEN = 64;
-    localparam AXI_DATA_WIDTH = 64 + 32;
+    localparam AXI_DATA_WIDTH = 64 + 32 + 64;
     localparam period = 10;
     localparam clk_period = 5;
 
@@ -36,9 +36,11 @@ module dut_continuous_monitoring_system_control;
     // just for simulation
     reg ctrl_initialized = 0;
 
+    reg en = 1;
+
     continuous_monitoring_system #(
         .XLEN(XLEN),
-        .AXI_DATA_WIDTH(AXI_DATA_WIDTH),
+//        .AXI_DATA_WIDTH(AXI_DATA_WIDTH),
         .CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED(1)
     ) cms (
         .clk(clk),
@@ -59,7 +61,8 @@ module dut_continuous_monitoring_system_control;
         // control signals (determining operational mode of the continuous_monitoring_system)
         .ctrl_addr(ctrl_addr), 
         .ctrl_wdata(ctrl_wdata), 
-        .ctrl_write_enable(ctrl_write_enable)
+        .ctrl_write_enable(ctrl_write_enable),
+        .en(en)
     );
 
 

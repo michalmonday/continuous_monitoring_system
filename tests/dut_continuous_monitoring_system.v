@@ -5,7 +5,7 @@
 
 module dut_continuous_monitoring_system;
     localparam XLEN = 64;
-    localparam AXI_DATA_WIDTH = 64 + 32;
+    localparam AXI_DATA_WIDTH = 1024;
     localparam period = 10;
     localparam clk_period = 5;
 
@@ -21,6 +21,12 @@ module dut_continuous_monitoring_system;
     reg [`ADDR_WIDTH-1:0]ctrl_addr = 0;
     reg [`DATA_WIDTH-1:0]ctrl_wdata = 0;
     reg ctrl_write_enable = 0;
+
+    reg en = 1;
+
+    localparam INPUT_EVENT_BITMAP_WIDTH = 115;
+    reg [INPUT_EVENT_BITMAP_WIDTH-1:0] performance_events = 0; // bitmap
+
 
     continuous_monitoring_system #(
         .XLEN(XLEN),
@@ -45,7 +51,9 @@ module dut_continuous_monitoring_system;
         // control signals (determining operational mode of the continuous_monitoring_system)
         .ctrl_addr(ctrl_addr), 
         .ctrl_wdata(ctrl_wdata), 
-        .ctrl_write_enable(ctrl_write_enable)
+        .ctrl_write_enable(ctrl_write_enable),
+        .en(en),
+        .performance_events(performance_events)
     );
 
     always 
@@ -54,32 +62,88 @@ module dut_continuous_monitoring_system;
         #clk_period;
     end
 
-    reg [3:0] i = 0;
+    reg [4:0] i = 0;
     always @ (posedge clk) begin
         pc = pc +4;
         i = i + 1;
         case (i)
-            0: instr = 32'h00000000; // nop
-            1: instr = 32'h0000006f; // riscv branch instruction
-            2: instr = 32'b1100011000000001000001100011; // blt     a0, a1, .LBB0_2
-            3: instr = 32'h00000067; // riscv jalr instruction
-            4: instr = 32'h00000000; // nop
-            5: instr = 32'h000000ef; // riscv jal instruction
-            6: instr = 32'b00000000000100110000000000010011; // addi t0, t1, 10
-            7: instr = 32'h00000000; // nop
-            8: instr = 32'h0000006f; // riscv branch instruction
-            9: instr = 32'b1100011000000001000001100011; // blt     a0, a1, .LBB0_2
-            10: instr = 32'h00000001; // WFI
-            11: instr = 32'h0000006f; // riscv branch instruction
-            12: instr = 32'b1100011000000001000001100011; // blt     a0, a1, .LBB0_2
-            13: instr = 32'h00000067; // riscv jalr instruction
-            14: instr = 32'h00000000; // nop
-            15: instr = 32'h000000ef; // riscv jal instruction
-            16: instr = 32'b00000000000100110000000000010011; // addi t0, t1, 10
-            17: instr = 32'h00000000; // nop
-            18: instr = 32'h0000006f; // riscv branch instruction
-            19: instr = 32'b1100011000000001000001100011; // blt     a0, a1, .LBB0_2
-            default: instr = 32'h00000000; // nop
+            0:  begin 
+                instr = 32'h00000000; // nop
+                performance_events = 8'b10101010;
+            end
+            1:  begin 
+                instr = 32'h0000006f; // riscv branch instruction
+                performance_events = 8'b10101010;
+            end
+            2:  begin 
+                instr = 32'h0C601063; // blt     a0, a1, .LBB0_2
+                performance_events = 8'b10101010;
+            end
+            3:  begin 
+                instr = 32'h00000067; // riscv jalr instruction
+                performance_events = 8'b01010101;
+            end
+            4:  begin 
+                instr = 32'h00000000; // nop
+                performance_events = 8'b00000001;
+            end
+            5:  begin 
+                instr = 32'h000000ef; // riscv jal instruction
+                performance_events = 8'b00000001;
+            end
+            6:  begin 
+                instr = 32'h00130013; // addi t0, t1, 10
+                performance_events = 8'b00000001;
+            end
+            7:  begin 
+                instr = 32'h00000000; // nop
+                performance_events = 8'b00000001;
+            end
+            8:  begin 
+                instr = 32'h0000006f; // riscv branch instruction
+                performance_events = 8'b00000001;
+            end
+            9:  begin 
+                instr = 32'h0C601063; // blt     a0, a1, .LBB0_2
+            end
+
+            10: begin 
+                 instr = 32'h10500073; // WFI (wait for interrupt)
+            end
+            11: begin 
+                 instr = 32'h10500073; // WFI (wait for interrupt)
+            end
+
+            12: begin 
+                 instr = 32'h0000006f; // riscv branch instruction
+            end
+            13: begin 
+                 instr = 32'h0C601063; // blt     a0, a1, .LBB0_2
+            end
+            14: begin 
+                 instr = 32'h00000067; // riscv jalr instruction
+            end
+            15: begin 
+                 instr = 32'h00000000; // nop
+            end
+            16: begin 
+                 instr = 32'h000000ef; // riscv jal instruction
+            end
+            17: begin 
+                 instr = 32'h00130013; // addi t0, t1, 10
+            end
+            18: begin 
+                 instr = 32'h00000000; // nop
+            end
+            19: begin 
+                 instr = 32'h0000006f; // riscv branch instruction
+            end
+            20: begin 
+                 instr = 32'h0C601063; // blt     a0, a1, .LBB0_2
+            end
+            default: begin
+                 instr = 32'h00000000; // nop
+            end
         endcase
     end
 
