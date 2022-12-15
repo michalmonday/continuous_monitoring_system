@@ -33,6 +33,7 @@ class ContinuousMonitoringSystemController:
     ADDR_MONITORED_ADDRESS_RANGE_UPPER_BOUND = 7
     ADDR_WFI_REACHED = 8
     ADDR_CLK_COUNTER = 9
+    ADDR_LAST_WRITE_TIMESTAMP = 10
 
     def __init__(self, axi_gpio):
         # self.axi_gpio = axi_gpio
@@ -107,3 +108,6 @@ class ContinuousMonitoringSystemController:
 
     def reset_clk_counter(self):
         self.send_data_to_cms(0, __class__.ADDR_CLK_COUNTER)
+    
+    def reset_last_write_timestamp(self):
+        self.send_data_to_cms(0, __class__.ADDR_LAST_WRITE_TIMESTAMP)

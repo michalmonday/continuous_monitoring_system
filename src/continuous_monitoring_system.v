@@ -21,12 +21,17 @@
 `define ADDR_MONITORED_ADDRESS_RANGE_UPPER_BOUND 7
 `define ADDR_WFI_STOP 8
 `define ADDR_CLK_COUNTER 9
+`define ADDR_LAST_WRITE_TIMESTAMP 10
 
 `define CLK_COUNTER_WIDTH 64
+`define NO_OF_PERFORMANCE_EVENTS 115
+
+// 8 bits allow to store 256 possible values, it could be enough to make them distinct enough for creating the program profile
+`define PERFORMANCE_EVENT_MOD_COUNTER_WIDTH 8
 
 module continuous_monitoring_system #(
     parameter XLEN = 64,
-    parameter AXI_DATA_WIDTH = XLEN + 32 + `CLK_COUNTER_WIDTH,
+    parameter AXI_DATA_WIDTH = 1024,//XLEN + 32 + `CLK_COUNTER_WIDTH,
     parameter CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED = 1 // 1 = write enable is pos edge triggered, 0 = write enable is level triggered
     //parameter CTRL_ADDR_WIDTH = 4 // internal addressing (each of 16 addresses can result in a different action upon writing/reading)
 ) (
@@ -52,7 +57,8 @@ module continuous_monitoring_system #(
 
     // enable the module (if disabled, the module will not send any data to the FIFO)
     // this may be connected to the GPIO rst_n (the same one used to reset the processor)
-    input en
+    input en,
+    input [NO_OF_PERFORMANCE_EVENTS-1:0]performance_events
 );
     wire drop_instr;
 
@@ -79,6 +85,9 @@ module continuous_monitoring_system #(
     reg [`CLK_COUNTER_WIDTH-1:0] last_write_timestamp = 0;
     wire [`CLK_COUNTER_WIDTH-1:0] clk_counter_delta = clk_counter - last_write_timestamp;
 
+    wire [`PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1] performance_event_counters[NO_OF_PERFORMANCE_EVENTS-1:0] = 0;
+    wire performance_counters_rst_n = ~data_to_axi_write_enable && rst_n; // reset upon write to FIFO
+
     // edge detector allows to detect pos/neg edges of a write enable signal
     // this is useful when this module is controlled by AXI GPIO from Python
     // it can be disabled by setting CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED to 0
@@ -93,6 +102,13 @@ module continuous_monitoring_system #(
         .clk(clk),
         .instr(instr),
         .drop_instr(drop_instr)
+    );
+
+    performance_event_counters performance_event_counters_inst (
+        .clk(clk),
+        .rst_n(performance_counters_rst_n),
+        .performance_events(performance_events), // input bitmap (each bit is indicating if the corresponding performance event happens now)
+        .performance_event_mod_counters(performance_event_mod_counters)  // output counters
     );
 
     wire [AXI_DATA_WIDTH-1:0]data_pkt = {instr, clk_counter_delta, pc};
@@ -208,6 +224,12 @@ module continuous_monitoring_system #(
                     // WFI reached can be used to reset (it is reset anyway after loading Overlay again)
                     `ADDR_WFI_STOP: begin
                         wfi_stop <= ctrl_wdata;
+                    end
+                    `ADDR_CLK_COUNTER: begin
+                        clk_counter <= ctrl_wdata;
+                    end
+                    `ADDR_LAST_WRITE_TIMESTAMP: begin
+                        last_write_timestamp <= ctrl_wdata;
                     end
 
                     default: begin
