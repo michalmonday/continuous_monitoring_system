@@ -6,86 +6,65 @@
 
 `timescale 1ns/10ps
 
-`define WFI_INSTRUCTION 'h10500073
-
-`define CTRL_ADDR_WIDTH 8 // internal addressing (each of 256 addresses can result in a different action upon writing/reading)
-`define CTRL_DATA_WIDTH 64 // control data width, the functionality of the module is controlled by writing to address+data ports
-
-`define ADDR_TRIGGER_TRACE_START_ADDRESS_ENABLED 0
-`define ADDR_TRIGGER_TRACE_END_ADDRESS_ENABLED 1
-`define ADDR_TRIGGER_TRACE_START_ADDRESS 2
-`define ADDR_TRIGGER_TRACE_END_ADDRESS 3
-`define ADDR_MONITORED_ADDRESS_RANGE_LOWER_BOUND_ENABLED 4
-`define ADDR_MONITORED_ADDRESS_RANGE_UPPER_BOUND_ENABLED 5
-`define ADDR_MONITORED_ADDRESS_RANGE_LOWER_BOUND 6
-`define ADDR_MONITORED_ADDRESS_RANGE_UPPER_BOUND 7
-`define ADDR_WFI_STOP 8
-`define ADDR_CLK_COUNTER 9
-`define ADDR_LAST_WRITE_TIMESTAMP 10
-
-`define CLK_COUNTER_WIDTH 64
-`define NO_OF_PERFORMANCE_EVENTS 115
-
-// 8 bits allow to store 256 possible values, it could be enough to make them distinct enough for creating the program profile
-`define PERFORMANCE_EVENT_MOD_COUNTER_WIDTH 7
+import continuous_monitoring_system_pkg::*;
 
 module continuous_monitoring_system #(
-    parameter XLEN = 64,
-    parameter AXI_DATA_WIDTH = 1024,//XLEN + 32 + `CLK_COUNTER_WIDTH,
     parameter CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED = 1 // 1 = write enable is pos edge triggered, 0 = write enable is level triggered
     //parameter CTRL_ADDR_WIDTH = 4 // internal addressing (each of 16 addresses can result in a different action upon writing/reading)
 ) (
-    input clk, rst_n, 
+    input   logic   clk,
+    input   logic   rst_n,
 
     // data pkt signals (to be stored in FIFO)
-    input [31:0] instr,
-    input [XLEN-1:0] pc,
-    input pc_valid, // determines whether the current instruction/pc is executed now
-
+    input   logic   [RISC_V_INSTRUCTION_WIDTH - 1 : 0]  instr,
+    input   logic   [XLEN - 1 : 0]                      pc,
+    input   logic                                       pc_valid, // determines whether the current instruction/pc is executed now
 
     // axi signals (interfacing with FIFO)
-    output wire M_AXIS_tvalid,
-    input M_AXIS_tready,
-    output wire [AXI_DATA_WIDTH-1:0] M_AXIS_tdata,
-    output wire M_AXIS_tlast,
-    input [31:0] tlast_interval, // number of items in FIFO after which tlast is asserted
+    output  logic                               M_AXIS_tvalid,
+    input   logic                               M_AXIS_tready,
+    output  logic   [AXI_DATA_WIDTH - 1 : 0]    M_AXIS_tdata,
+    output  logic                               M_AXIS_tlast,
+    input   logic   [31 : 0]                    tlast_interval, // number of items in FIFO after which tlast is asserted
 
     // control signals (determining operational mode of the continuous_monitoring_system)
-    input [`CTRL_ADDR_WIDTH-1:0] ctrl_addr,
-    input [`CTRL_DATA_WIDTH-1:0] ctrl_wdata,
-    input ctrl_write_enable,
+    input   ctrl_addr_t                         ctrl_addr,
+    input   logic   [CTRL_DATA_WIDTH - 1 : 0]   ctrl_wdata,
+    input   logic                               ctrl_write_enable,
 
     // enable the module (if disabled, the module will not send any data to the FIFO)
     // this may be connected to the GPIO rst_n (the same one used to reset the processor)
-    input en,
-    input [`NO_OF_PERFORMANCE_EVENTS-1:0]performance_events
+    
+    input   logic                                       en,
+    input   logic   [NO_OF_PERFORMANCE_EVENTS - 1 : 0]  performance_events
 );
-    wire drop_instr;
+    logic                               drop_instr;
 
     // At the end of a program, a "wfi" (wait for interrupt) instruction is executed 
     // which stops the program from running. This is a good time to stop sending trace
     // to the FIFO.
-    reg [1:0]wfi_stop = 0; // it is 2 bits to use it as a counter and control write enable only based on MSB (to delay disabling write by 1 cycle)
+    reg [1 : 0] wfi_stop = 0; // it is 2 bits to use it as a counter and control write enable only based on MSB (to delay disabling write by 1 cycle)
 
     // monitored address range
     reg monitored_address_range_lower_bound_enabled = 0;
     reg monitored_address_range_upper_bound_enabled = 0;
-    reg [XLEN-1:0] monitored_address_range_lower_bound = 0;
-    reg [XLEN-1:0] monitored_address_range_upper_bound = -1;
+    reg [XLEN - 1 : 0] monitored_address_range_lower_bound = 0;
+    reg [XLEN - 1 : 0] monitored_address_range_upper_bound = -1;
     // wire is_pc_in_range = (pc >= monitored_address_range_lower_bound) & (pc <= monitored_address_range_upper_bound);
 
     reg trigger_trace_start_address_enabled = 0;
     reg trigger_trace_end_address_enabled = 0;
-    reg [XLEN-1:0] trigger_trace_start_address = 0;
-    reg [XLEN-1:0] trigger_trace_end_address = -1;
+    reg [XLEN - 1 : 0] trigger_trace_start_address = 0;
+    reg [XLEN - 1 : 0] trigger_trace_end_address = -1;
     reg trigger_trace_start_reached = 0;
     reg trigger_trace_end_reached = 0;
 
-    reg [`CLK_COUNTER_WIDTH-1:0] clk_counter = 0;
-    reg [`CLK_COUNTER_WIDTH-1:0] last_write_timestamp = 0;
-    wire [`CLK_COUNTER_WIDTH-1:0] clk_counter_delta = clk_counter - last_write_timestamp;
+    reg     [CLK_COUNTER_WIDTH - 1 : 0] clk_counter = 0;
+    reg     [CLK_COUNTER_WIDTH - 1 : 0] last_write_timestamp = 0;
+    logic   [CLK_COUNTER_WIDTH - 1 : 0] clk_counter_delta = clk_counter - last_write_timestamp;
 
-    wire [`PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] performance_event_counters[`NO_OF_PERFORMANCE_EVENTS-1:0];
+    logic [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH - 1 : 0] performance_event_counters[NO_OF_PERFORMANCE_EVENTS - 1 : 0];
+
 
     // edge detector allows to detect pos/neg edges of a write enable signal
     // this is useful when this module is controlled by AXI GPIO from Python
@@ -103,7 +82,7 @@ module continuous_monitoring_system #(
         .drop_instr(drop_instr)
     );
 
-    wire [AXI_DATA_WIDTH-1:0]data_pkt = {
+    wire [AXI_DATA_WIDTH -1 : 0] data_pkt = {
             instr,
             clk_counter_delta,
             pc,
@@ -204,8 +183,8 @@ module continuous_monitoring_system #(
         .write_enable(data_to_axi_write_enable),
         .data_pkt(data_pkt),
         .tlast_interval(tlast_interval),
-        //.force_tlast(instr == `WFI_INSTRUCTION),
-        .tlast(instr == `WFI_INSTRUCTION),
+        //.force_tlast(instr == WFI_INSTRUCTION),
+        .tlast(instr == WFI_INSTRUCTION),
         .M_AXIS_tvalid(M_AXIS_tvalid),
         .M_AXIS_tready(M_AXIS_tready),
         .M_AXIS_tdata(M_AXIS_tdata),
@@ -256,10 +235,10 @@ module continuous_monitoring_system #(
                 last_write_timestamp <= clk_counter;
             end 
 
-            if (instr == `WFI_INSTRUCTION && wfi_stop < 2 && en) begin
+            if (instr == WFI_INSTRUCTION && wfi_stop < 2 && en) begin
                 wfi_stop <= wfi_stop + 1;
             end 
-            else if (instr != `WFI_INSTRUCTION) begin
+            else if (instr != WFI_INSTRUCTION) begin
                 wfi_stop <= 0;
             end
 
@@ -267,41 +246,41 @@ module continuous_monitoring_system #(
             if ((CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED & ctrl_write_enable_pos_edge) || (~CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED & ctrl_write_enable)) begin
                 case(ctrl_addr)
                     // trace trigger enables and addresses (must match the current PC exactly to trigger)
-                    `ADDR_TRIGGER_TRACE_START_ADDRESS_ENABLED: begin
+                    TRIGGER_TRACE_START_ADDRESS_ENABLED: begin
                         trigger_trace_start_address_enabled <= ctrl_wdata;
                     end 
-                    `ADDR_TRIGGER_TRACE_END_ADDRESS_ENABLED: begin
+                    TRIGGER_TRACE_END_ADDRESS_ENABLED: begin
                         trigger_trace_end_address_enabled <= ctrl_wdata;
                     end
-                    `ADDR_TRIGGER_TRACE_START_ADDRESS: begin
+                    TRIGGER_TRACE_START_ADDRESS: begin
                         trigger_trace_start_address <= ctrl_wdata;
                     end
-                    `ADDR_TRIGGER_TRACE_END_ADDRESS: begin
+                    TRIGGER_TRACE_END_ADDRESS: begin
                         trigger_trace_end_address <= ctrl_wdata;
                     end
 
                     // monitored address range (must be within the range to collect trace)
-                    `ADDR_MONITORED_ADDRESS_RANGE_LOWER_BOUND_ENABLED: begin
+                    MONITORED_ADDRESS_RANGE_LOWER_BOUND_ENABLED: begin
                         monitored_address_range_lower_bound_enabled <= ctrl_wdata;
                     end
-                    `ADDR_MONITORED_ADDRESS_RANGE_UPPER_BOUND_ENABLED: begin
+                    MONITORED_ADDRESS_RANGE_UPPER_BOUND_ENABLED: begin
                         monitored_address_range_upper_bound_enabled <= ctrl_wdata;
                     end
-                    `ADDR_MONITORED_ADDRESS_RANGE_LOWER_BOUND: begin
+                    MONITORED_ADDRESS_RANGE_LOWER_BOUND: begin
                         monitored_address_range_lower_bound <= ctrl_wdata;
                     end
-                    `ADDR_MONITORED_ADDRESS_RANGE_UPPER_BOUND: begin
+                    MONITORED_ADDRESS_RANGE_UPPER_BOUND: begin
                         monitored_address_range_upper_bound <= ctrl_wdata;
                     end
 
                     // WFI reached can be used to reset (it is reset anyway after loading Overlay again)
-                    `ADDR_WFI_STOP: begin
+                    WFI_STOPPED: begin
                         wfi_stop <= ctrl_wdata;
                     end
-                    `ADDR_CLK_COUNTER: begin
+                    CLK_COUNTER: begin
                         clk_counter <= ctrl_wdata;
                     end
-                    `ADDR_LAST_WRITE_TIMESTAMP: begin
+                    LAST_WRITE_TIMESTAMP: begin
                         last_write_timestamp <= ctrl_wdata;
                     end
 
