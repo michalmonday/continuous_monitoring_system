@@ -104,6 +104,10 @@ module continuous_monitoring_system #(
     );
 
     wire [AXI_DATA_WIDTH-1:0]data_pkt = {
+        instr,
+        clk_counter_delta,
+        pc,
+
         performance_event_counters[114], performance_event_counters[113], performance_event_counters[112], performance_event_counters[111],
         performance_event_counters[110], performance_event_counters[109], performance_event_counters[108], performance_event_counters[107],
         performance_event_counters[106], performance_event_counters[105], performance_event_counters[104], performance_event_counters[103],
@@ -132,11 +136,7 @@ module continuous_monitoring_system #(
         performance_event_counters[14], performance_event_counters[13], performance_event_counters[12], performance_event_counters[11],
         performance_event_counters[10], performance_event_counters[9], performance_event_counters[8], performance_event_counters[7],
         performance_event_counters[6], performance_event_counters[5], performance_event_counters[4], performance_event_counters[3],
-        performance_event_counters[2], performance_event_counters[1], performance_event_counters[0],
-
-        instr,
-        clk_counter_delta,
-        pc
+        performance_event_counters[2], performance_event_counters[1], performance_event_counters[0]
         };
 
     wire data_to_axi_write_enable = en &
