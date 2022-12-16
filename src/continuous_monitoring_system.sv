@@ -76,8 +76,14 @@ module continuous_monitoring_system #(
         .pos_edge(ctrl_write_enable_pos_edge)
     );
 
-    trace_filter trace_filter_inst (
+    trace_filter #(
+        .SEND_INSTRUCTION_AFTER_BRANCH(0),
+        .SEND_INSTRUCTION_AFTER_JUMP(0),
+        .SEND_INSTRUCTION_AFTER_WFI(0)
+    ) trace_filter_inst (
         .clk(clk),
+        .rst_n(rst_n),
+        .pc_valid(pc_valid),
         .instr(instr),
         .drop_instr(drop_instr)
     );
