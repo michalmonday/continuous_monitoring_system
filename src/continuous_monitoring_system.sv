@@ -40,7 +40,7 @@ module continuous_monitoring_system #(
 );
     logic drop_instr;
 
-    wire pc_valid_new = (pc != last_pc[1]) & (last_pc[1] != 0);
+    wire pc_valid_new = (last_pc[0] != last_pc[1]) & (last_pc[1] != 0) & rst_n;
 
     // At the end of a program, a "wfi" (wait for interrupt) instruction is executed 
     // which stops the program from running. This is a good time to stop sending trace
@@ -209,10 +209,10 @@ module continuous_monitoring_system #(
                 last_write_timestamp <= clk_counter;
             end 
 
-            if (instr == WFI_INSTRUCTION && wfi_stop < 2 && en) begin
+            if (last_instr[0] == WFI_INSTRUCTION && wfi_stop < 2 && en) begin
                 wfi_stop <= wfi_stop + 1;
             end 
-            else if (instr != WFI_INSTRUCTION) begin
+            else if (last_instr[0] != WFI_INSTRUCTION) begin
                 wfi_stop <= 0;
             end
 
