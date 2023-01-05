@@ -40,14 +40,15 @@ module continuous_monitoring_system #(
 );
     logic drop_instr;
 
-    wire pc_valid_new = ((last_pc[0] != last_pc[1]) || (wfi_stop == 1)) 
-                        & (last_pc[1] != 0) 
-                        & rst_n;
-
     // At the end of a program, a "wfi" (wait for interrupt) instruction is executed 
     // which stops the program from running. This is a good time to stop sending trace
     // to the FIFO.
-    reg [1 : 0] wfi_stop = 0; // it is 2 bits to use it as a counter and control write enable only based on MSB (to delay disabling write by 1 cycle)
+    reg [7 : 0] wfi_stop = 0; // it is 2 bits to use it as a counter and control write enable only based on MSB (to delay disabling write by 1 cycle)
+    localparam WFI_STOP_THRESHOLD = 255;
+
+    wire pc_valid_new = ((last_pc[0] != last_pc[1]) || (wfi_stop == WFI_STOP_THRESHOLD - 1)) 
+                        & (last_pc[1] != 0) 
+                        & rst_n;
 
     // monitored address range
     reg monitored_address_range_lower_bound_enabled = 0;
@@ -134,7 +135,7 @@ module continuous_monitoring_system #(
     wire data_to_axi_write_enable = en &
                                     pc_valid_new &
                                     ~drop_instr & 
-                                    (wfi_stop < 2) & 
+                                    (wfi_stop < WFI_STOP_THRESHOLD) & 
                                     (trigger_trace_start_reached | ~trigger_trace_start_address_enabled) &
                                     (~trigger_trace_end_reached | ~trigger_trace_end_address_enabled) &
                                     (last_pc[1] >= monitored_address_range_lower_bound | ~monitored_address_range_lower_bound_enabled) &
@@ -211,7 +212,7 @@ module continuous_monitoring_system #(
                 last_write_timestamp <= clk_counter;
             end 
 
-            if (last_instr[1] == WFI_INSTRUCTION && wfi_stop < 2 && en) begin
+            if (last_instr[1] == WFI_INSTRUCTION && wfi_stop < WFI_STOP_THRESHOLD && en) begin
                 wfi_stop <= wfi_stop + 1;
             end 
             else if (last_instr[1] != WFI_INSTRUCTION) begin
