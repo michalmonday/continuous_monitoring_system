@@ -70,19 +70,19 @@ module dut_continuous_monitoring_system;
 
     reg [4:0] i = 0;
     always @ (posedge clk) begin
-        pc = pc +4;
-        i = i + 1;
         case (i)
             0:  begin 
                 instr = 32'h00000001; // nop
                 performance_events = 8'b10101010;
+                rst_n = 0;
             end
             1:  begin 
                 instr = 32'h0000006f; // riscv branch instruction
                 performance_events = 8'b10101010;
+                rst_n = 1;
             end
             2:  begin 
-                instr = 32'h00000001; // nop
+                instr = 32'h0000006f; // riscv branch instruction
                 performance_events = 8'b10101010;
             end
             3:  begin 
@@ -159,6 +159,13 @@ module dut_continuous_monitoring_system;
                  instr = 32'h00000000; // nop
             end
         endcase
+        if (i < 2 || i > 3) begin
+            pc = pc + 4;
+        end else begin
+            $display("pc = %h", pc);
+            pc = pc;
+        end
+        i = i + 1;
     end
 
 

@@ -40,6 +40,8 @@ module continuous_monitoring_system #(
 );
     logic drop_instr;
 
+    wire pc_valid_new = (pc != last_pc[1]) & (last_pc[1] != 0);
+
     // At the end of a program, a "wfi" (wait for interrupt) instruction is executed 
     // which stops the program from running. This is a good time to stop sending trace
     // to the FIFO.
@@ -65,6 +67,9 @@ module continuous_monitoring_system #(
 
     logic [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH - 1 : 0] performance_event_counters[0 : NO_OF_PERFORMANCE_EVENTS - 1];
 
+    reg [AXI_DATA_WIDTH - 1 : 0] last_data_pkt [1:0];
+    reg [RISC_V_INSTRUCTION_WIDTH - 1: 0] last_instr [1:0];
+    reg [XLEN - 1 : 0] last_pc [1:0];
 
     // edge detector allows to detect pos/neg edges of a write enable signal
     // this is useful when this module is controlled by AXI GPIO from Python
@@ -83,12 +88,13 @@ module continuous_monitoring_system #(
     ) trace_filter_inst (
         .clk(clk),
         .rst_n(rst_n),
-        .pc_valid(pc_valid),
-        .instr(instr),
+        .pc_valid(pc_valid_new),
+        .instr(last_instr[1]),
         .drop_instr(drop_instr)
     );
 
-    wire [AXI_DATA_WIDTH -1 : 0] data_pkt = {
+
+    wire [AXI_DATA_WIDTH - 1 : 0] data_pkt = {
             instr,
             clk_counter_delta,
             pc,
@@ -124,13 +130,13 @@ module continuous_monitoring_system #(
         };
 
     wire data_to_axi_write_enable = en &
-                                    pc_valid &
+                                    pc_valid_new &
                                     ~drop_instr & 
                                     (wfi_stop < 2) & 
                                     (trigger_trace_start_reached | ~trigger_trace_start_address_enabled) &
                                     (~trigger_trace_end_reached | ~trigger_trace_end_address_enabled) &
-                                    (pc >= monitored_address_range_lower_bound | ~monitored_address_range_lower_bound_enabled) &
-                                    (pc <= monitored_address_range_upper_bound | ~monitored_address_range_upper_bound_enabled)
+                                    (last_pc[1] >= monitored_address_range_lower_bound | ~monitored_address_range_lower_bound_enabled) &
+                                    (last_pc[1] <= monitored_address_range_upper_bound | ~monitored_address_range_upper_bound_enabled)
                                     ;
 
     wire performance_counters_rst_n = ~data_to_axi_write_enable & rst_n; // reset upon write to FIFO
@@ -148,14 +154,33 @@ module continuous_monitoring_system #(
         .clk(clk),
         .rst_n(rst_n),
         .write_enable(data_to_axi_write_enable),
-        .data_pkt(data_pkt),
+        .data_pkt(last_data_pkt[1]),
         .tlast_interval(tlast_interval),
-        .tlast(instr == WFI_INSTRUCTION),
+        .tlast(last_instr[1] == WFI_INSTRUCTION),
         .M_AXIS_tvalid(M_AXIS_tvalid),
         .M_AXIS_tready(M_AXIS_tready),
         .M_AXIS_tdata(M_AXIS_tdata),
         .M_AXIS_tlast(M_AXIS_tlast)
     );
+
+    always @(posedge clk) begin
+        if (rst_n == 0) begin
+            for (int i = 0; i < 2; i = i + 1) begin
+                last_data_pkt[i] <= 0;
+                last_pc[i] <= 0;
+                last_instr[i] <= 0;
+            end
+        end
+        else begin
+            last_data_pkt[1] <= last_data_pkt[0];
+            last_pc[1] <= last_pc[0];
+            last_instr[1] <= last_instr[0];
+
+            last_data_pkt[0] <= data_pkt;
+            last_pc[0] <= pc;
+            last_instr[0] <= instr;
+        end
+    end
 
     // control registers setting
     always @(posedge clk) begin
