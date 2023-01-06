@@ -95,7 +95,7 @@ module continuous_monitoring_system #(
         .clk(clk),
         .rst_n(rst_n),
         .pc_valid(pc_valid_new),
-        .instr(last_instr[1]),
+        .next_instr(last_instr[0]),
         .drop_instr(drop_instr)
     );
 

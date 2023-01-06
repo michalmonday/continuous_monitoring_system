@@ -15,29 +15,27 @@ module trace_filter #(
     input   logic                                       clk, 
     input   logic                                       rst_n,
     input   logic                                       pc_valid,
-    input   logic   [RISC_V_INSTRUCTION_WIDTH - 1 : 0]  instr,
+    input   logic   [RISC_V_INSTRUCTION_WIDTH - 1 : 0]  next_instr,
     output  logic                                       drop_instr
 );
 
     logic branch;
     logic jump;
-    logic WFI;
+    logic wfi;
 
     reg queue_instruction = 1'b0;
     reg send_next_instruction = 1'b0;
     
-
-    assign branch = (instr[6:0] == BRANCH_OPCODE) ||
-                    (instr[1:0] == C_BRANCH_OPCODE && instr[15:14] == C_BRANCH_FUNCT3_2_MSB);
-
-
-    assign jump =   (instr[6:0] == JAL_OPCODE) || 
-                    (instr[6:0] == JALR_OPCODE) ||
-                    (instr[1:0] == C_JAL_OPCODE && instr[15:13] == C_JAL_FUNCT3_3_MSB) ||
-                    (instr[1:0] == C_JALR_OPCODE && instr[15:13] == C_JALR_FUNCT4_3_MSB);
+    // assign branch = (next_instr[6:0] == BRANCH_OPCODE) ||
+    //                 (next_instr[1:0] == C_BRANCH_OPCODE && next_instr[15:14] == C_BRANCH_FUNCT3_2_MSB);
 
 
-    assign WFI =    (instr == WFI_INSTRUCTION);
+    // assign jump =   (next_instr[6:0] == JAL_OPCODE) || 
+    //                 (next_instr[6:0] == JALR_OPCODE) ||
+    //                 (next_instr[1:0] == C_JAL_OPCODE && next_instr[15:13] == C_JAL_FUNCT3_3_MSB) ||
+    //                 (next_instr[1:0] == C_JALR_OPCODE && next_instr[15:13] == C_JALR_FUNCT4_3_MSB);
+
+    // assign wfi =    (next_instr == WFI_INSTRUCTION);
 
 
     always_ff @(posedge clk) begin // Sends the instruction proceeding a branch/jump/return if the corresponding parameter is set.
@@ -45,13 +43,24 @@ module trace_filter #(
             queue_instruction <= 1'b0;
             send_next_instruction <= 1'b0;
         end else if (pc_valid) begin
-            queue_instruction <= (branch && SEND_INSTRUCTION_AFTER_BRANCH) || (jump && SEND_INSTRUCTION_AFTER_JUMP) || (WFI && SEND_INSTRUCTION_AFTER_WFI);
+            branch <= (next_instr[6:0] == BRANCH_OPCODE) ||
+                     (next_instr[1:0] == C_BRANCH_OPCODE && next_instr[15:14] == C_BRANCH_FUNCT3_2_MSB);
+            jump <=  (next_instr[6:0] == JAL_OPCODE) || 
+                     (next_instr[6:0] == JALR_OPCODE) ||
+                     (next_instr[1:0] == C_JAL_OPCODE && next_instr[15:13] == C_JAL_FUNCT3_3_MSB) ||
+                     (next_instr[1:0] == C_JALR_OPCODE && next_instr[15:13] == C_JALR_FUNCT4_3_MSB);
+
+
+            wfi <= (next_instr == WFI_INSTRUCTION);
+
+
+            queue_instruction <= (branch && SEND_INSTRUCTION_AFTER_BRANCH) || (jump && SEND_INSTRUCTION_AFTER_JUMP) || (wfi && SEND_INSTRUCTION_AFTER_WFI);
             send_next_instruction <= queue_instruction;
         end
     end
         
 
-    assign drop_instr = ~(branch || jump  || WFI || send_next_instruction);
+    assign drop_instr = ~(branch || jump  || wfi || send_next_instruction);
         
     
 endmodule
