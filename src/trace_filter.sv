@@ -54,8 +54,9 @@ module trace_filter #(
             wfi <= (next_instr == WFI_INSTRUCTION);
 
 
-            queue_instruction <= (branch && SEND_INSTRUCTION_AFTER_BRANCH) || (jump && SEND_INSTRUCTION_AFTER_JUMP) || (wfi && SEND_INSTRUCTION_AFTER_WFI);
-            send_next_instruction <= queue_instruction;
+            // queue_instruction <= (branch && SEND_INSTRUCTION_AFTER_BRANCH) || (jump && SEND_INSTRUCTION_AFTER_JUMP) || (wfi && SEND_INSTRUCTION_AFTER_WFI);
+            // send_next_instruction <= queue_instruction;
+            send_next_instruction <= (branch && SEND_INSTRUCTION_AFTER_BRANCH) || (jump && SEND_INSTRUCTION_AFTER_JUMP) || (wfi && SEND_INSTRUCTION_AFTER_WFI);
         end
     end
         
