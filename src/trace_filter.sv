@@ -45,7 +45,7 @@ module trace_filter #(
             queue_instruction <= 1'b0;
             send_next_instruction <= 1'b0;
         end else if (pc_valid) begin
-            queue_instruction <= (branch && SEND_INSTRUCTION_AFTER_BRANCH) || (jump && SEND_INSTRUCTION_AFTER_JUMP) || (WFI && SEND_INSTRUCTION_AFTER_WFI) && pc_valid;
+            queue_instruction <= ((branch && SEND_INSTRUCTION_AFTER_BRANCH) || (jump && SEND_INSTRUCTION_AFTER_JUMP) || (WFI && SEND_INSTRUCTION_AFTER_WFI)) && pc_valid;
             send_next_instruction <= queue_instruction;
         end
     end
