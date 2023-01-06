@@ -7,12 +7,13 @@ module dut_trace_filter;
     wire drop_instr;
     reg clk = 1;
     reg [31:0] instr = 0;
+    reg pc_valid = 1;
 
-    trace_filter tf (.clk(clk), .instr(instr), .drop_instr(drop_instr));
+    trace_filter tf (.clk(clk), .instr(instr), .pc_valid(pc_valid), .drop_instr(drop_instr));
     
     initial 
         begin
-            #clk_period;
+            // #clk_period;
             
             instr =  32'h00000000;
             #period; 
@@ -30,6 +31,9 @@ module dut_trace_filter;
             #period;
 
             instr =  32'h00000000;
+            #period; 
+
+            instr =  32'h00000001;
             #period; 
 
             // riscv jal instruction

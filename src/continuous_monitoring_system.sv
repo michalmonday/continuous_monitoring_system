@@ -36,7 +36,8 @@ module continuous_monitoring_system #(
     // this may be connected to the GPIO rst_n (the same one used to reset the processor)
     
     input   logic                                       en,
-    input   logic   [NO_OF_PERFORMANCE_EVENTS - 1 : 0]  performance_events
+    input   logic   [NO_OF_PERFORMANCE_EVENTS - 1 : 0]  performance_events,
+    output logic pc_valid_new_probe
 );
     logic drop_instr;
 
@@ -49,6 +50,8 @@ module continuous_monitoring_system #(
     wire pc_valid_new = ((last_pc[0] != last_pc[1]) || (wfi_stop == WFI_STOP_THRESHOLD - 1)) 
                         & (last_pc[1] != 0) 
                         & rst_n;
+
+    assign pc_valid_new_probe = pc_valid_new;
 
     // monitored address range
     reg monitored_address_range_lower_bound_enabled = 0;
