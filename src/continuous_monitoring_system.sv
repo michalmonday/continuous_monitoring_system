@@ -105,7 +105,7 @@ module continuous_monitoring_system #(
 
     wire [AXI_DATA_WIDTH - 1 : 0] data_pkt = {
             instr,
-            clk_counter_delta,
+            clk_counter_delta,  // this value is later updated 
             pc,
             performance_event_counters[0], performance_event_counters[1], performance_event_counters[2], performance_event_counters[3],
             performance_event_counters[4], performance_event_counters[5], performance_event_counters[6], performance_event_counters[7],
@@ -190,7 +190,7 @@ module continuous_monitoring_system #(
             last_instr[0] <= instr;
 
             // update clk_counter_delta with a fresh value
-            last_data_pkt[1][CLK_COUNTER_DELTA_LOCATION + CLK_COUNTER_DELTA_WIDTH - 1 : CLK_COUNTER_DELTA_LOCATION] <= clk_counter_delta;
+            last_data_pkt[1][CLK_COUNTER_DELTA_LOCATION + CLK_COUNTER_WIDTH - 1 : CLK_COUNTER_DELTA_LOCATION] <= clk_counter_delta;
         end
     end
 
