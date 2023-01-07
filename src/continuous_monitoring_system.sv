@@ -172,28 +172,12 @@ module continuous_monitoring_system #(
         .M_AXIS_tlast(M_AXIS_tlast)
     );
 
-    always @(posedge clk) begin
-        if (rst_n == 0) begin
-            for (int i = 0; i < 2; i = i + 1) begin
-                last_data_pkt[i] <= 0;
-                last_pc[i] <= 0;
-                last_instr[i] <= 0;
-            end
-        end
-        else begin
-            last_data_pkt[1] <= last_data_pkt[0];
-            last_pc[1] <= last_pc[0];
-            last_instr[1] <= last_instr[0];
-
-            last_data_pkt[0] <= data_pkt;
-            last_pc[0] <= pc;
-            last_instr[0] <= instr;
-
-            // update clk_counter_delta with a fresh value
-            last_data_pkt[1][CLK_COUNTER_DELTA_LOCATION + CLK_COUNTER_WIDTH - 1 : CLK_COUNTER_DELTA_LOCATION] <= clk_counter_delta;
-
-        end
-    end
+    // always @(posedge clk) begin
+    //     if (rst_n == 0) begin
+    //     end
+    //     else begin
+    //     end
+    // end
 
     // control registers setting
     always @(posedge clk) begin
@@ -216,6 +200,12 @@ module continuous_monitoring_system #(
             clk_counter <= 0;
             last_write_timestamp <= 0;
             clk_counter_delta <= 0;
+
+            for (int i = 0; i < 2; i = i + 1) begin
+                last_data_pkt[i] <= 0;
+                last_pc[i] <= 0;
+                last_instr[i] <= 0;
+            end
         end
         else begin
             clk_counter <= clk_counter + 1;
@@ -225,6 +215,21 @@ module continuous_monitoring_system #(
             end else begin
                 clk_counter_delta <= clk_counter - last_write_timestamp;
             end
+            // passing last_data_pkt[0] to last_data_pkt[1] with a fresh clk_counter_delta
+            last_data_pkt[1] <= {
+                last_data_pkt[0][AXI_DATA_WIDTH-1:CLK_COUNTER_DELTA_LOCATION + CLK_COUNTER_WIDTH], // all MSB after clk counter delta
+                clk_counter_delta,
+                last_data_pkt[0][CLK_COUNTER_DELTA_LOCATION-1:0] // all LSB before clk counter delta
+                };
+            last_pc[1] <= last_pc[0];
+            last_instr[1] <= last_instr[0];
+
+            last_data_pkt[0] <= data_pkt;
+            last_pc[0] <= pc;
+            last_instr[0] <= instr;
+
+            // // update clk_counter_delta with a fresh value
+            // last_data_pkt[1][CLK_COUNTER_DELTA_LOCATION + CLK_COUNTER_WIDTH - 1 : CLK_COUNTER_DELTA_LOCATION] <= ;
 
             if (last_instr[1] == WFI_INSTRUCTION && wfi_stop < WFI_STOP_THRESHOLD && en) begin
                 wfi_stop <= wfi_stop + 1;

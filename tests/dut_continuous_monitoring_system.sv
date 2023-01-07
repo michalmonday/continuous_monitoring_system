@@ -34,7 +34,7 @@ module dut_continuous_monitoring_system;
 
     wire [XLEN - 1:0] tdata_pc = M_AXIS_tdata[PC_LOCATION+63:PC_LOCATION];
     wire [RISC_V_INSTRUCTION_WIDTH - 1:0] tdata_instr = M_AXIS_tdata[INSTR_LOCATION+31:INSTR_LOCATION];
-    wire [CLK_COUNTER_DELTA_WIDTH-1:0] tdata_clk_counter_delta = M_AXIS_tdata[CLK_COUNTER_DELTA_LOCATION+CLK_COUNTER_DELTA_WIDTH-1:CLK_COUNTER_DELTA_LOCATION];
+    wire [CLK_COUNTER_WIDTH-1:0] tdata_clk_counter_delta = M_AXIS_tdata[CLK_COUNTER_DELTA_LOCATION+CLK_COUNTER_WIDTH-1:CLK_COUNTER_DELTA_LOCATION];
 
 
     continuous_monitoring_system #(
