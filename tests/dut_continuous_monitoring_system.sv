@@ -1,4 +1,4 @@
-`timescale 1ns/10ps  // time-unit = 1 ns, precision = 10 ps
+`timescale 1ns/1ps  // time-unit = 1 ns, precision = 10 ps
 
 `define ADDR_WIDTH 8 // internal addressing (each of 256 addresses can result in a different action upon writing/reading)
 `define DATA_WIDTH 64 // control data width, the functionality of the module is controlled by writing to address+data ports

@@ -7,7 +7,7 @@ module dut_performance_event_counters ();
     reg clk = 0;
     reg rst_n = 1;
     reg [INPUT_EVENT_BITMAP_WIDTH-1:0] performance_events = 0; // bitmap
-    wire [INPUT_EVENT_BITMAP_WIDTH-1:0] counters[COUNTER_WIDTH-1:0];
+    wire [COUNTER_WIDTH-1:0] counters[INPUT_EVENT_BITMAP_WIDTH-1:0];
 
     performance_event_counters #(
         .INPUT_EVENT_BITMAP_WIDTH(INPUT_EVENT_BITMAP_WIDTH),
@@ -29,8 +29,12 @@ module dut_performance_event_counters ();
             3: performance_events = 'b011;
             4: performance_events = 'b101;
             5: performance_events = 'b001;
-            6: performance_events = 'b001;
-            7: performance_events = 'b001;
+            6: begin performance_events = 'b001;
+                rst_n = 0;
+            end
+            7: begin performance_events = 'b001;
+                rst_n = 1;
+            end 
             8: performance_events = 'b001;
             9: performance_events = 'b001;
 

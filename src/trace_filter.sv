@@ -42,6 +42,9 @@ module trace_filter #(
         if (rst_n == 0) begin
             queue_instruction <= 1'b0;
             send_next_instruction <= 1'b0;
+            branch <= 0;
+            jump <= 0;
+            wfi <= 0;
         end else if (pc_valid) begin
             branch <= (next_instr[6:0] == BRANCH_OPCODE) ||
                      (next_instr[1:0] == C_BRANCH_OPCODE && next_instr[15:14] == C_BRANCH_FUNCT3_2_MSB);
