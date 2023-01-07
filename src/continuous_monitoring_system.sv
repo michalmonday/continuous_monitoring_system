@@ -213,7 +213,7 @@ module continuous_monitoring_system #(
                 last_write_timestamp <= clk_counter;
                 last_data_pkt[1] <= {
                     last_data_pkt[0][AXI_DATA_WIDTH-1:CLK_COUNTER_DELTA_LOCATION + CLK_COUNTER_WIDTH], // all MSB after clk counter delta
-                    1,
+                    64'b1,
                     last_data_pkt[0][CLK_COUNTER_DELTA_LOCATION-1:0] // all LSB before clk counter delta
                     };               clk_counter_delta <= 1;
             end else begin
