@@ -69,7 +69,7 @@ module continuous_monitoring_system #(
 
     reg     [CLK_COUNTER_WIDTH - 1 : 0] clk_counter = 0;
     reg     [CLK_COUNTER_WIDTH - 1 : 0] last_write_timestamp = 0;
-    logic   [CLK_COUNTER_WIDTH - 1 : 0] clk_counter_delta = clk_counter - last_write_timestamp;
+    logic   [CLK_COUNTER_WIDTH - 1 : 0] clk_counter_delta; 
 
     logic [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH - 1 : 0] performance_event_counters[0 : NO_OF_PERFORMANCE_EVENTS - 1];
 
@@ -191,6 +191,7 @@ module continuous_monitoring_system #(
 
             // update clk_counter_delta with a fresh value
             last_data_pkt[1][CLK_COUNTER_DELTA_LOCATION + CLK_COUNTER_WIDTH - 1 : CLK_COUNTER_DELTA_LOCATION] <= clk_counter_delta;
+
         end
     end
 
@@ -214,12 +215,16 @@ module continuous_monitoring_system #(
 
             clk_counter <= 0;
             last_write_timestamp <= 0;
+            clk_counter_delta <= 0;
         end
         else begin
             clk_counter <= clk_counter + 1;
             if (data_to_axi_write_enable) begin
                 last_write_timestamp <= clk_counter;
-            end 
+                clk_counter_delta <= 1;
+            end else begin
+                clk_counter_delta <= clk_counter - last_write_timestamp;
+            end
 
             if (last_instr[1] == WFI_INSTRUCTION && wfi_stop < WFI_STOP_THRESHOLD && en) begin
                 wfi_stop <= wfi_stop + 1;
