@@ -99,6 +99,9 @@ module continuous_monitoring_system #(
         .drop_instr(drop_instr)
     );
 
+    localparam PC_LOCATION = NO_OF_PERFORMANCE_EVENTS * PERFORMANCE_EVENT_MOD_COUNTER_WIDTH;
+    localparam CLK_COUNTER_DELTA_LOCATION = PC_LOCATION + XLEN;
+    localparam INSTR_LOCATION = CLK_COUNTER_DELTA_LOCATION + CLK_COUNTER_WIDTH;
 
     wire [AXI_DATA_WIDTH - 1 : 0] data_pkt = {
             instr,
@@ -185,6 +188,9 @@ module continuous_monitoring_system #(
             last_data_pkt[0] <= data_pkt;
             last_pc[0] <= pc;
             last_instr[0] <= instr;
+
+            // update clk_counter_delta with a fresh value
+            last_data_pkt[1][CLK_COUNTER_DELTA_LOCATION + CLK_COUNTER_DELTA_WIDTH - 1 : CLK_COUNTER_DELTA_LOCATION] <= clk_counter_delta;
         end
     end
 

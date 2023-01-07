@@ -25,13 +25,16 @@ module dut_continuous_monitoring_system;
 
     reg en = 1;
 
-    localparam INPUT_EVENT_BITMAP_WIDTH = 115;
-    reg [INPUT_EVENT_BITMAP_WIDTH-1:0] performance_events = 0; // bitmap
+    localparam NO_OF_PERFORMANCE_EVENTS = 115;
+    reg [NO_OF_PERFORMANCE_EVENTS-1:0] performance_events = 0; // bitmap
 
-    localparam PC_LOCATION = 115*7;
-    localparam INSTR_LOCATION = PC_LOCATION + 64 + 64;
-    wire [63:0]tdata_pc = M_AXIS_tdata[PC_LOCATION+63:PC_LOCATION];
-    wire [31:0]tdata_instr = M_AXIS_tdata[INSTR_LOCATION+31:INSTR_LOCATION];
+    localparam PC_LOCATION = NO_OF_PERFORMANCE_EVENTS * PERFORMANCE_EVENT_MOD_COUNTER_WIDTH;
+    localparam CLK_COUNTER_DELTA_LOCATION = PC_LOCATION + XLEN;
+    localparam INSTR_LOCATION = CLK_COUNTER_DELTA_LOCATION + CLK_COUNTER_WIDTH;
+
+    wire [XLEN - 1:0] tdata_pc = M_AXIS_tdata[PC_LOCATION+63:PC_LOCATION];
+    wire [RISC_V_INSTRUCTION_WIDTH - 1:0] tdata_instr = M_AXIS_tdata[INSTR_LOCATION+31:INSTR_LOCATION];
+    wire [CLK_COUNTER_DELTA_WIDTH-1:0] tdata_clk_counter_delta = M_AXIS_tdata[CLK_COUNTER_DELTA_LOCATION+CLK_COUNTER_DELTA_WIDTH-1:CLK_COUNTER_DELTA_LOCATION];
 
 
     continuous_monitoring_system #(
