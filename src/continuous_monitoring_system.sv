@@ -211,16 +211,21 @@ module continuous_monitoring_system #(
             clk_counter <= clk_counter + 1;
             if (data_to_axi_write_enable) begin
                 last_write_timestamp <= clk_counter;
-                clk_counter_delta <= 1;
+                last_data_pkt[1] <= {
+                    last_data_pkt[0][AXI_DATA_WIDTH-1:CLK_COUNTER_DELTA_LOCATION + CLK_COUNTER_WIDTH], // all MSB after clk counter delta
+                    1,
+                    last_data_pkt[0][CLK_COUNTER_DELTA_LOCATION-1:0] // all LSB before clk counter delta
+                    };               clk_counter_delta <= 1;
             end else begin
                 clk_counter_delta <= clk_counter - last_write_timestamp;
+                last_data_pkt[1] <= {
+                    last_data_pkt[0][AXI_DATA_WIDTH-1:CLK_COUNTER_DELTA_LOCATION + CLK_COUNTER_WIDTH], // all MSB after clk counter delta
+                    clk_counter - last_write_timestamp,
+                    last_data_pkt[0][CLK_COUNTER_DELTA_LOCATION-1:0] // all LSB before clk counter delta
+                    };               clk_counter_delta <= 1;
             end
             // passing last_data_pkt[0] to last_data_pkt[1] with a fresh clk_counter_delta
-            last_data_pkt[1] <= {
-                last_data_pkt[0][AXI_DATA_WIDTH-1:CLK_COUNTER_DELTA_LOCATION + CLK_COUNTER_WIDTH], // all MSB after clk counter delta
-                clk_counter - last_write_timestamp,
-                last_data_pkt[0][CLK_COUNTER_DELTA_LOCATION-1:0] // all LSB before clk counter delta
-                };
+
             last_pc[1] <= last_pc[0];
             last_instr[1] <= last_instr[0];
 
