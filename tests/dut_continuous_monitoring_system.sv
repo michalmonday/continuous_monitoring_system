@@ -25,7 +25,6 @@ module dut_continuous_monitoring_system;
 
     reg en = 1;
 
-    localparam NO_OF_PERFORMANCE_EVENTS = 115;
     reg [NO_OF_PERFORMANCE_EVENTS-1:0] performance_events = 0; // bitmap
 
     localparam PC_LOCATION = NO_OF_PERFORMANCE_EVENTS * PERFORMANCE_EVENT_MOD_COUNTER_WIDTH;
@@ -48,7 +47,7 @@ module dut_continuous_monitoring_system;
         // data pkt signals (to be stored in FIFO)
         .instr(instr),
         .pc(pc),
-        .pc_valid(pc_valid),
+        // .pc_valid(pc_valid),
 
         // axi signals (interfacing with FIFO)
         .M_AXIS_tvalid(M_AXIS_tvalid), // out

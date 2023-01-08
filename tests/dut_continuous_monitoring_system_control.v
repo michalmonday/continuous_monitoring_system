@@ -49,7 +49,7 @@ module dut_continuous_monitoring_system_control;
         // data pkt signals (to be stored in FIFO)
         .instr(instr),
         .pc(pc),
-        .pc_valid(pc_valid),
+        // .pc_valid(pc_valid),
 
         // axi signals (interfacing with FIFO)
         .M_AXIS_tvalid(M_AXIS_tvalid), // out

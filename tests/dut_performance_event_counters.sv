@@ -1,17 +1,17 @@
 `timescale 1ns/10ps  // time-unit = 1 ns, precision = 10 ps
 
+import continuous_monitoring_system_pkg::*;
+
 module dut_performance_event_counters ();
-    localparam COUNTER_WIDTH = 7;
-    localparam INPUT_EVENT_BITMAP_WIDTH=115;
     
     reg clk = 0;
     reg rst_n = 1;
-    reg [INPUT_EVENT_BITMAP_WIDTH-1:0] performance_events = 0; // bitmap
-    wire [COUNTER_WIDTH-1:0] counters[INPUT_EVENT_BITMAP_WIDTH-1:0];
+    reg [NO_OF_PERFORMANCE_EVENTS-1:0] performance_events = 0; // bitmap
+    wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] counters[NO_OF_PERFORMANCE_EVENTS-1:0];
 
     performance_event_counters #(
-        .INPUT_EVENT_BITMAP_WIDTH(INPUT_EVENT_BITMAP_WIDTH),
-        .COUNTER_WIDTH(COUNTER_WIDTH)
+        .INPUT_EVENT_BITMAP_WIDTH(NO_OF_PERFORMANCE_EVENTS),
+        .COUNTER_WIDTH(PERFORMANCE_EVENT_MOD_COUNTER_WIDTH)
     ) performance_event_counters_inst (
         .clk(clk),
         .rst_n(rst_n),

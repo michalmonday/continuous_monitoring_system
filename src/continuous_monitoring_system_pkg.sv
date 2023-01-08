@@ -43,7 +43,8 @@ typedef enum logic [CTRL_ADDR_WIDTH - 1 : 0] { // control register addresses
     } ctrl_addr_t;
 
 parameter CLK_COUNTER_WIDTH = 64;
-parameter NO_OF_PERFORMANCE_EVENTS = 115;
+//parameter NO_OF_PERFORMANCE_EVENTS = 115;
+parameter NO_OF_PERFORMANCE_EVENTS = 37;
 
 parameter PERFORMANCE_EVENT_MOD_COUNTER_WIDTH = 7;
 

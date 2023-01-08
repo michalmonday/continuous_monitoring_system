@@ -18,7 +18,7 @@ module continuous_monitoring_system #(
     // data pkt signals (to be stored in FIFO)
     input   logic   [RISC_V_INSTRUCTION_WIDTH - 1 : 0]  instr,
     input   logic   [XLEN - 1 : 0]                      pc,
-    input   logic                                       pc_valid, // determines whether the current instruction/pc is executed now
+    // input   logic                                       pc_valid, // determines whether the current instruction/pc is executed now
 
     // axi signals (interfacing with FIFO)
     output  logic                               M_AXIS_tvalid,
@@ -114,9 +114,11 @@ module continuous_monitoring_system #(
                                     ;
 
     wire performance_counters_rst_n = ~data_to_axi_write_enable & rst_n; // reset upon write to FIFO
-    // reg performance_counters_rst_n;
 
-    performance_event_counters performance_event_counters_inst (
+    performance_event_counters #(
+        .INPUT_EVENT_BITMAP_WIDTH(NO_OF_PERFORMANCE_EVENTS),
+        .COUNTER_WIDTH(PERFORMANCE_EVENT_MOD_COUNTER_WIDTH)
+    ) performance_event_counters_inst (
         .clk(clk),
         .rst_n(performance_counters_rst_n),
         .performance_events(performance_events), // input bitmap (each bit is indicating if the corresponding performance event happens now)
@@ -166,7 +168,6 @@ module continuous_monitoring_system #(
 
             data_pkt <= 0;
 
-            // performance_counters_rst_n <= 1;
         end
         else begin
             clk_counter <= clk_counter + 1;
@@ -188,27 +189,8 @@ module continuous_monitoring_system #(
                 performance_event_counters[24], performance_event_counters[25], performance_event_counters[26], performance_event_counters[27],
                 performance_event_counters[28], performance_event_counters[29], performance_event_counters[30], performance_event_counters[31],
                 performance_event_counters[32], performance_event_counters[33], performance_event_counters[34], performance_event_counters[35],
-                performance_event_counters[36], performance_event_counters[37], performance_event_counters[38], performance_event_counters[39],
-                performance_event_counters[40], performance_event_counters[41], performance_event_counters[42], performance_event_counters[43],
-                performance_event_counters[44], performance_event_counters[45], performance_event_counters[46], performance_event_counters[47],
-                performance_event_counters[48], performance_event_counters[49], performance_event_counters[50], performance_event_counters[51],
-                performance_event_counters[52], performance_event_counters[53], performance_event_counters[54], performance_event_counters[55],
-                performance_event_counters[56], performance_event_counters[57], performance_event_counters[58], performance_event_counters[59],
-                performance_event_counters[60], performance_event_counters[61], performance_event_counters[62], performance_event_counters[63],
-                performance_event_counters[64], performance_event_counters[65], performance_event_counters[66], performance_event_counters[67],
-                performance_event_counters[68], performance_event_counters[69], performance_event_counters[70], performance_event_counters[71],
-                performance_event_counters[72], performance_event_counters[73], performance_event_counters[74], performance_event_counters[75],
-                performance_event_counters[76], performance_event_counters[77], performance_event_counters[78], performance_event_counters[79],
-                performance_event_counters[80], performance_event_counters[81], performance_event_counters[82], performance_event_counters[83],
-                performance_event_counters[84], performance_event_counters[85], performance_event_counters[86], performance_event_counters[87],
-                performance_event_counters[88], performance_event_counters[89], performance_event_counters[90], performance_event_counters[91],
-                performance_event_counters[92], performance_event_counters[93], performance_event_counters[94], performance_event_counters[95],
-                performance_event_counters[96], performance_event_counters[97], performance_event_counters[98], performance_event_counters[99],
-                performance_event_counters[100], performance_event_counters[101], performance_event_counters[102], performance_event_counters[103],
-                performance_event_counters[104], performance_event_counters[105], performance_event_counters[106], performance_event_counters[107],
-                performance_event_counters[108], performance_event_counters[109], performance_event_counters[110], performance_event_counters[111],
-                performance_event_counters[112], performance_event_counters[113], performance_event_counters[114]
-            };
+                performance_event_counters[36]
+                };
 
             last_pc[1] <= last_pc[0];
             last_instr[1] <= last_instr[0];
