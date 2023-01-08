@@ -47,7 +47,7 @@ continuous_monitoring_system #(
     // data pkt signals (to be stored in FIFO)
     .instr(instr),
     .pc(pc),
-    .pc_valid(pc_valid), // determines whether the current instruction/pc is executed now
+    // .pc_valid(pc_valid), // determines whether the current instruction/pc is executed now
 
 
     // axi signals (interfacing with FIFO)
