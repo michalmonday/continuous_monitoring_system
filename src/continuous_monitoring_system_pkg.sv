@@ -1,10 +1,14 @@
 package continuous_monitoring_system_pkg;
 
+// NOTE: KEEP IN MIND TO UPDATE cms_ip_wrapper.v DEFINITIONS AS WELL (WHEN CHANGING PARAMETERS HERE)
+//       it has duplicate definitions because Vivado can't use SystemVerilog as top level file
+
+
 // RISC-V standard widths
 parameter XLEN = 64;
 parameter RISC_V_INSTRUCTION_WIDTH = 32;
 
-parameter AXI_DATA_WIDTH = 1024;
+parameter AXI_DATA_WIDTH = 512;
 
 // Instruction opcodes
 parameter BRANCH_OPCODE = 7'b1100011;

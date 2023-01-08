@@ -5,9 +5,9 @@ in SystemVerilog. This is just a workaround.
 */
 `define CTRL_ADDR_WIDTH 8 // internal addressing (each of 256 addresses can result in a different action upon writing/reading)
 `define CTRL_DATA_WIDTH 64 // control data width, the functionality of the module is controlled by writing to address+data ports
-`define NO_OF_PERFORMANCE_EVENTS 115
+`define NO_OF_PERFORMANCE_EVENTS 37
 `define XLEN 64
-`define AXI_DATA_WIDTH 1024
+`define AXI_DATA_WIDTH 512
 
 
 module cms_ip_wrapper #(
