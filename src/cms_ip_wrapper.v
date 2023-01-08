@@ -19,7 +19,7 @@ module cms_ip_wrapper #(
     // data pkt signals (to be stored in FIFO)
     input [31:0] instr,
     input [`XLEN-1:0] pc,
-    input pc_valid, // determines whether the current instruction/pc is executed now
+    // input pc_valid, // determines whether the current instruction/pc is executed now
 
     // axi signals (interfacing with FIFO)
     output wire M_AXIS_tvalid,
