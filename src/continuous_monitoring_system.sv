@@ -174,30 +174,60 @@ module continuous_monitoring_system #(
 
             if (data_to_axi_write_enable) begin
                 last_write_timestamp <= clk_counter;
-            end 
+                data_pkt <= {
+                    last_instr[0],
+                    64'b1,  
+                    last_pc[0],
+                    performance_event_counters[0], performance_event_counters[1], performance_event_counters[2], performance_event_counters[3],
+                    performance_event_counters[4], performance_event_counters[5], performance_event_counters[6], performance_event_counters[7],
+                    performance_event_counters[8], performance_event_counters[9], performance_event_counters[10], performance_event_counters[11],
+                    performance_event_counters[12], performance_event_counters[13], performance_event_counters[14], performance_event_counters[15],
+                    performance_event_counters[16], performance_event_counters[17], performance_event_counters[18], performance_event_counters[19],
+                    performance_event_counters[20], performance_event_counters[21], performance_event_counters[22], performance_event_counters[23],
+                    performance_event_counters[24], performance_event_counters[25], performance_event_counters[26], performance_event_counters[27],
+                    performance_event_counters[28], performance_event_counters[29], performance_event_counters[30], performance_event_counters[31],
+                    performance_event_counters[32], performance_event_counters[33], performance_event_counters[34], performance_event_counters[35],
+                    performance_event_counters[36]
+                    };
+            end else begin 
+                data_pkt <= {
+                    last_instr[0],
+                    clk_counter - last_write_timestamp,  
+                    last_pc[0],
+                    performance_event_counters[0], performance_event_counters[1], performance_event_counters[2], performance_event_counters[3],
+                    performance_event_counters[4], performance_event_counters[5], performance_event_counters[6], performance_event_counters[7],
+                    performance_event_counters[8], performance_event_counters[9], performance_event_counters[10], performance_event_counters[11],
+                    performance_event_counters[12], performance_event_counters[13], performance_event_counters[14], performance_event_counters[15],
+                    performance_event_counters[16], performance_event_counters[17], performance_event_counters[18], performance_event_counters[19],
+                    performance_event_counters[20], performance_event_counters[21], performance_event_counters[22], performance_event_counters[23],
+                    performance_event_counters[24], performance_event_counters[25], performance_event_counters[26], performance_event_counters[27],
+                    performance_event_counters[28], performance_event_counters[29], performance_event_counters[30], performance_event_counters[31],
+                    performance_event_counters[32], performance_event_counters[33], performance_event_counters[34], performance_event_counters[35],
+                    performance_event_counters[36]
+                    };
+            end
 
-            data_pkt <= {
-                last_instr[0],
-                data_to_axi_write_enable ? 64'b1 : clk_counter - last_write_timestamp,  
-                last_pc[0],
-                performance_event_counters[0], performance_event_counters[1], performance_event_counters[2], performance_event_counters[3],
-                performance_event_counters[4], performance_event_counters[5], performance_event_counters[6], performance_event_counters[7],
-                performance_event_counters[8], performance_event_counters[9], performance_event_counters[10], performance_event_counters[11],
-                performance_event_counters[12], performance_event_counters[13], performance_event_counters[14], performance_event_counters[15],
-                performance_event_counters[16], performance_event_counters[17], performance_event_counters[18], performance_event_counters[19],
-                performance_event_counters[20], performance_event_counters[21], performance_event_counters[22], performance_event_counters[23],
-                performance_event_counters[24], performance_event_counters[25], performance_event_counters[26], performance_event_counters[27],
-                performance_event_counters[28], performance_event_counters[29], performance_event_counters[30], performance_event_counters[31],
-                performance_event_counters[32], performance_event_counters[33], performance_event_counters[34], performance_event_counters[35],
-                performance_event_counters[36]
-                };
+            // data_pkt <= {
+            //     last_instr[0],
+            //     data_to_axi_write_enable ? 64'b1 : clk_counter - last_write_timestamp,  
+            //     last_pc[0],
+            //     performance_event_counters[0], performance_event_counters[1], performance_event_counters[2], performance_event_counters[3],
+            //     performance_event_counters[4], performance_event_counters[5], performance_event_counters[6], performance_event_counters[7],
+            //     performance_event_counters[8], performance_event_counters[9], performance_event_counters[10], performance_event_counters[11],
+            //     performance_event_counters[12], performance_event_counters[13], performance_event_counters[14], performance_event_counters[15],
+            //     performance_event_counters[16], performance_event_counters[17], performance_event_counters[18], performance_event_counters[19],
+            //     performance_event_counters[20], performance_event_counters[21], performance_event_counters[22], performance_event_counters[23],
+            //     performance_event_counters[24], performance_event_counters[25], performance_event_counters[26], performance_event_counters[27],
+            //     performance_event_counters[28], performance_event_counters[29], performance_event_counters[30], performance_event_counters[31],
+            //     performance_event_counters[32], performance_event_counters[33], performance_event_counters[34], performance_event_counters[35],
+            //     performance_event_counters[36]
+            //     };
 
             last_pc[1] <= last_pc[0];
             last_instr[1] <= last_instr[0];
 
             last_pc[0] <= pc;
             last_instr[0] <= instr;
-
 
             if (last_instr[1] == WFI_INSTRUCTION && wfi_stop < WFI_STOP_THRESHOLD && en) begin
                 wfi_stop <= wfi_stop + 1;
