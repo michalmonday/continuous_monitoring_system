@@ -182,8 +182,8 @@ module continuous_monitoring_system #(
                                        (wfi_stop < WFI_STOP_THRESHOLD) & 
                                        (trigger_trace_start_reached | ~trigger_trace_start_address_enabled) &
                                        (~trigger_trace_end_reached | ~trigger_trace_end_address_enabled) &
-                                       (pc_queue[3] >= monitored_address_range_lower_bound | ~monitored_address_range_lower_bound_enabled) &
-                                       (pc_queue[3] <= monitored_address_range_upper_bound | ~monitored_address_range_upper_bound_enabled)
+                                       (pc_queue[2] >= monitored_address_range_lower_bound | ~monitored_address_range_lower_bound_enabled) &
+                                       (pc_queue[2] <= monitored_address_range_upper_bound | ~monitored_address_range_upper_bound_enabled)
                                        ;
 
             clk_counter <= clk_counter + 1;
@@ -193,9 +193,9 @@ module continuous_monitoring_system #(
             end
 
             data_pkt <= {
-                instr_queue[3],
+                instr_queue[2],
                 data_to_axi_write_enable ? 64'b1 : clk_counter - last_write_timestamp,  
-                pc_queue[3],
+                pc_queue[2],
                 performance_event_counters[0], performance_event_counters[1], performance_event_counters[2], performance_event_counters[3],
                 performance_event_counters[4], performance_event_counters[5], performance_event_counters[6], performance_event_counters[7],
                 performance_event_counters[8], performance_event_counters[9], performance_event_counters[10], performance_event_counters[11],
