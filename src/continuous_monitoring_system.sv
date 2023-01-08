@@ -53,7 +53,7 @@ module continuous_monitoring_system #(
     //                     & rst_n;
 
 
-    localparam QUEUE_SIZE = 5;
+    localparam QUEUE_SIZE = 6;
     reg [RISC_V_INSTRUCTION_WIDTH - 1: 0] instr_queue [QUEUE_SIZE-1:0];
     reg [XLEN - 1 : 0] pc_queue [QUEUE_SIZE-1:0];
     reg pc_valid_queue [QUEUE_SIZE-1:0];
@@ -96,7 +96,7 @@ module continuous_monitoring_system #(
         .clk(clk),
         .rst_n(rst_n),
         .pc_valid(pc_valid_queue[0]),
-        .next_instr(instr_queue[1]),
+        .next_instr(instr_queue[2]),
         .drop_instr(drop_instr)
     );
 
