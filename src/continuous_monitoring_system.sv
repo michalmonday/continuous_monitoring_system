@@ -73,8 +73,9 @@ module continuous_monitoring_system #(
 
     logic [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH - 1 : 0] performance_event_counters[0 : NO_OF_PERFORMANCE_EVENTS - 1];
 
-    reg [RISC_V_INSTRUCTION_WIDTH - 1: 0] instr_queue [3:0];
-    reg [XLEN - 1 : 0] pc_queue [3:0];
+    localparam QUEUE_SIZE = 5;
+    reg [RISC_V_INSTRUCTION_WIDTH - 1: 0] instr_queue [QUEUE_SIZE-1:0];
+    reg [XLEN - 1 : 0] pc_queue [QUEUE_SIZE-1:0];
 
     // edge detector allows to detect pos/neg edges of a write enable signal
     // this is useful when this module is controlled by AXI GPIO from Python
@@ -163,7 +164,7 @@ module continuous_monitoring_system #(
             clk_counter <= 0;
             last_write_timestamp <= 0;
 
-            for (int i = 0; i < 4; i = i + 1) begin
+            for (int i = 0; i < QUEUE_SIZE; i = i + 1) begin
                 pc_queue[i] <= 0;
                 instr_queue[i] <= 0;
             end
@@ -193,9 +194,9 @@ module continuous_monitoring_system #(
             end
 
             data_pkt <= {
-                instr_queue[2],
+                instr_queue[4],
                 data_to_axi_write_enable ? 64'b1 : clk_counter - last_write_timestamp,  
-                pc_queue[2],
+                pc_queue[4],
                 performance_event_counters[0], performance_event_counters[1], performance_event_counters[2], performance_event_counters[3],
                 performance_event_counters[4], performance_event_counters[5], performance_event_counters[6], performance_event_counters[7],
                 performance_event_counters[8], performance_event_counters[9], performance_event_counters[10], performance_event_counters[11],
@@ -208,7 +209,7 @@ module continuous_monitoring_system #(
                 performance_event_counters[36]
                 };
 
-            for (int i = 1; i < 4; i = i + 1) begin
+            for (int i = 1; i < QUEUE_SIZE; i = i + 1) begin
                 pc_queue[i] <= pc_queue[i - 1];
                 instr_queue[i] <= instr_queue[i - 1];
             end
