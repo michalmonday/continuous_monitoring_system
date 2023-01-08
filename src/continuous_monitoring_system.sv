@@ -37,6 +37,8 @@ module continuous_monitoring_system #(
     
     input   logic                                       en,
     input   logic   [NO_OF_PERFORMANCE_EVENTS - 1 : 0]  performance_events
+    // output wire data_to_axi_write_enable_probe,
+    // output wire pc_valid_queue [QUEUE_SIZE-1:0] 
 );
     logic drop_instr;
 
@@ -94,7 +96,7 @@ module continuous_monitoring_system #(
         .clk(clk),
         .rst_n(rst_n),
         .pc_valid(pc_valid_queue[0]),
-        .next_instr(instr_queue[2]),
+        .next_instr(instr_queue[1]),
         .drop_instr(drop_instr)
     );
 
@@ -114,6 +116,8 @@ module continuous_monitoring_system #(
     //                                 (pc_queue[1] >= monitored_address_range_lower_bound | ~monitored_address_range_lower_bound_enabled) &
     //                                 (pc_queue[1] <= monitored_address_range_upper_bound | ~monitored_address_range_upper_bound_enabled)
     //                                 ;
+
+    // wire data_to_axi_write_enable_probe = data_to_axi_write_enable;
 
     wire performance_counters_rst_n = ~data_to_axi_write_enable & rst_n; // reset upon write to FIFO
 
