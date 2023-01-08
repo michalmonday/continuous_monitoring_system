@@ -47,9 +47,10 @@ module continuous_monitoring_system #(
     reg [7 : 0] wfi_stop = 0; // it is 2 bits to use it as a counter and control write enable only based on MSB (to delay disabling write by 1 cycle)
     localparam WFI_STOP_THRESHOLD = 255;
 
-    wire pc_valid_new = ((last_pc[0] != last_pc[1]) || (wfi_stop == WFI_STOP_THRESHOLD - 1)) 
-                        & (last_pc[1] != 0) 
-                        & rst_n;
+    reg pc_valid_new;
+    // wire pc_valid_new = ((pc_queue[0] != pc_queue[1]) || (wfi_stop == WFI_STOP_THRESHOLD - 1)) 
+    //                     & (pc_queue[1] != 0) 
+    //                     & rst_n;
 
     assign pc_valid_new_probe = pc_valid_new;
 
@@ -72,8 +73,8 @@ module continuous_monitoring_system #(
 
     logic [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH - 1 : 0] performance_event_counters[0 : NO_OF_PERFORMANCE_EVENTS - 1];
 
-    reg [RISC_V_INSTRUCTION_WIDTH - 1: 0] last_instr [1:0];
-    reg [XLEN - 1 : 0] last_pc [1:0];
+    reg [RISC_V_INSTRUCTION_WIDTH - 1: 0] instr_queue [3:0];
+    reg [XLEN - 1 : 0] pc_queue [3:0];
 
     // edge detector allows to detect pos/neg edges of a write enable signal
     // this is useful when this module is controlled by AXI GPIO from Python
@@ -93,7 +94,7 @@ module continuous_monitoring_system #(
         .clk(clk),
         .rst_n(rst_n),
         .pc_valid(pc_valid_new),
-        .next_instr(last_instr[0]),
+        .next_instr(instr_queue[2]),
         .drop_instr(drop_instr)
     );
 
@@ -103,15 +104,16 @@ module continuous_monitoring_system #(
 
     reg [AXI_DATA_WIDTH - 1 : 0] data_pkt = 0;
 
-    wire data_to_axi_write_enable = en &
-                                    pc_valid_new &
-                                    ~drop_instr & 
-                                    (wfi_stop < WFI_STOP_THRESHOLD) & 
-                                    (trigger_trace_start_reached | ~trigger_trace_start_address_enabled) &
-                                    (~trigger_trace_end_reached | ~trigger_trace_end_address_enabled) &
-                                    (last_pc[1] >= monitored_address_range_lower_bound | ~monitored_address_range_lower_bound_enabled) &
-                                    (last_pc[1] <= monitored_address_range_upper_bound | ~monitored_address_range_upper_bound_enabled)
-                                    ;
+    reg data_to_axi_write_enable;
+    // wire data_to_axi_write_enable = en &
+    //                                 pc_valid_new &
+    //                                 ~drop_instr & 
+    //                                 (wfi_stop < WFI_STOP_THRESHOLD) & 
+    //                                 (trigger_trace_start_reached | ~trigger_trace_start_address_enabled) &
+    //                                 (~trigger_trace_end_reached | ~trigger_trace_end_address_enabled) &
+    //                                 (pc_queue[1] >= monitored_address_range_lower_bound | ~monitored_address_range_lower_bound_enabled) &
+    //                                 (pc_queue[1] <= monitored_address_range_upper_bound | ~monitored_address_range_upper_bound_enabled)
+    //                                 ;
 
     wire performance_counters_rst_n = ~data_to_axi_write_enable & rst_n; // reset upon write to FIFO
 
@@ -133,7 +135,7 @@ module continuous_monitoring_system #(
         .write_enable(data_to_axi_write_enable),
         .data_pkt(data_pkt),
         .tlast_interval(tlast_interval),
-        .tlast(last_instr[1] == WFI_INSTRUCTION),
+        .tlast(instr_queue[3] == WFI_INSTRUCTION),
         .M_AXIS_tvalid(M_AXIS_tvalid),
         .M_AXIS_tready(M_AXIS_tready),
         .M_AXIS_tdata(M_AXIS_tdata),
@@ -161,78 +163,62 @@ module continuous_monitoring_system #(
             clk_counter <= 0;
             last_write_timestamp <= 0;
 
-            for (int i = 0; i < 2; i = i + 1) begin
-                last_pc[i] <= 0;
-                last_instr[i] <= 0;
+            for (int i = 0; i < 4; i = i + 1) begin
+                pc_queue[i] <= 0;
+                instr_queue[i] <= 0;
             end
 
             data_pkt <= 0;
 
         end
         else begin
+            pc_valid_new = ((pc_queue[0] != pc_queue[1]) || (wfi_stop == WFI_STOP_THRESHOLD - 1)) 
+                           & (pc_queue[1] != 0) 
+                           & rst_n;
+
+            data_to_axi_write_enable = en &
+                                       pc_valid_new &
+                                       ~drop_instr & 
+                                       (wfi_stop < WFI_STOP_THRESHOLD) & 
+                                       (trigger_trace_start_reached | ~trigger_trace_start_address_enabled) &
+                                       (~trigger_trace_end_reached | ~trigger_trace_end_address_enabled) &
+                                       (pc_queue[3] >= monitored_address_range_lower_bound | ~monitored_address_range_lower_bound_enabled) &
+                                       (pc_queue[3] <= monitored_address_range_upper_bound | ~monitored_address_range_upper_bound_enabled)
+                                       ;
+
             clk_counter <= clk_counter + 1;
 
             if (data_to_axi_write_enable) begin
                 last_write_timestamp <= clk_counter;
-                data_pkt <= {
-                    last_instr[0],
-                    64'b1,  
-                    last_pc[0],
-                    performance_event_counters[0], performance_event_counters[1], performance_event_counters[2], performance_event_counters[3],
-                    performance_event_counters[4], performance_event_counters[5], performance_event_counters[6], performance_event_counters[7],
-                    performance_event_counters[8], performance_event_counters[9], performance_event_counters[10], performance_event_counters[11],
-                    performance_event_counters[12], performance_event_counters[13], performance_event_counters[14], performance_event_counters[15],
-                    performance_event_counters[16], performance_event_counters[17], performance_event_counters[18], performance_event_counters[19],
-                    performance_event_counters[20], performance_event_counters[21], performance_event_counters[22], performance_event_counters[23],
-                    performance_event_counters[24], performance_event_counters[25], performance_event_counters[26], performance_event_counters[27],
-                    performance_event_counters[28], performance_event_counters[29], performance_event_counters[30], performance_event_counters[31],
-                    performance_event_counters[32], performance_event_counters[33], performance_event_counters[34], performance_event_counters[35],
-                    performance_event_counters[36]
-                    };
-            end else begin 
-                data_pkt <= {
-                    last_instr[0],
-                    clk_counter - last_write_timestamp,  
-                    last_pc[0],
-                    performance_event_counters[0], performance_event_counters[1], performance_event_counters[2], performance_event_counters[3],
-                    performance_event_counters[4], performance_event_counters[5], performance_event_counters[6], performance_event_counters[7],
-                    performance_event_counters[8], performance_event_counters[9], performance_event_counters[10], performance_event_counters[11],
-                    performance_event_counters[12], performance_event_counters[13], performance_event_counters[14], performance_event_counters[15],
-                    performance_event_counters[16], performance_event_counters[17], performance_event_counters[18], performance_event_counters[19],
-                    performance_event_counters[20], performance_event_counters[21], performance_event_counters[22], performance_event_counters[23],
-                    performance_event_counters[24], performance_event_counters[25], performance_event_counters[26], performance_event_counters[27],
-                    performance_event_counters[28], performance_event_counters[29], performance_event_counters[30], performance_event_counters[31],
-                    performance_event_counters[32], performance_event_counters[33], performance_event_counters[34], performance_event_counters[35],
-                    performance_event_counters[36]
-                    };
             end
 
-            // data_pkt <= {
-            //     last_instr[0],
-            //     data_to_axi_write_enable ? 64'b1 : clk_counter - last_write_timestamp,  
-            //     last_pc[0],
-            //     performance_event_counters[0], performance_event_counters[1], performance_event_counters[2], performance_event_counters[3],
-            //     performance_event_counters[4], performance_event_counters[5], performance_event_counters[6], performance_event_counters[7],
-            //     performance_event_counters[8], performance_event_counters[9], performance_event_counters[10], performance_event_counters[11],
-            //     performance_event_counters[12], performance_event_counters[13], performance_event_counters[14], performance_event_counters[15],
-            //     performance_event_counters[16], performance_event_counters[17], performance_event_counters[18], performance_event_counters[19],
-            //     performance_event_counters[20], performance_event_counters[21], performance_event_counters[22], performance_event_counters[23],
-            //     performance_event_counters[24], performance_event_counters[25], performance_event_counters[26], performance_event_counters[27],
-            //     performance_event_counters[28], performance_event_counters[29], performance_event_counters[30], performance_event_counters[31],
-            //     performance_event_counters[32], performance_event_counters[33], performance_event_counters[34], performance_event_counters[35],
-            //     performance_event_counters[36]
-            //     };
+            data_pkt <= {
+                instr_queue[3],
+                data_to_axi_write_enable ? 64'b1 : clk_counter - last_write_timestamp,  
+                pc_queue[3],
+                performance_event_counters[0], performance_event_counters[1], performance_event_counters[2], performance_event_counters[3],
+                performance_event_counters[4], performance_event_counters[5], performance_event_counters[6], performance_event_counters[7],
+                performance_event_counters[8], performance_event_counters[9], performance_event_counters[10], performance_event_counters[11],
+                performance_event_counters[12], performance_event_counters[13], performance_event_counters[14], performance_event_counters[15],
+                performance_event_counters[16], performance_event_counters[17], performance_event_counters[18], performance_event_counters[19],
+                performance_event_counters[20], performance_event_counters[21], performance_event_counters[22], performance_event_counters[23],
+                performance_event_counters[24], performance_event_counters[25], performance_event_counters[26], performance_event_counters[27],
+                performance_event_counters[28], performance_event_counters[29], performance_event_counters[30], performance_event_counters[31],
+                performance_event_counters[32], performance_event_counters[33], performance_event_counters[34], performance_event_counters[35],
+                performance_event_counters[36]
+                };
 
-            last_pc[1] <= last_pc[0];
-            last_instr[1] <= last_instr[0];
+            for (int i = 1; i < 4; i = i + 1) begin
+                pc_queue[i] <= pc_queue[i - 1];
+                instr_queue[i] <= instr_queue[i - 1];
+            end
+            pc_queue[0] <= pc;
+            instr_queue[0] <= instr;
 
-            last_pc[0] <= pc;
-            last_instr[0] <= instr;
-
-            if (last_instr[1] == WFI_INSTRUCTION && wfi_stop < WFI_STOP_THRESHOLD && en) begin
+            if (instr_queue[3] == WFI_INSTRUCTION && wfi_stop < WFI_STOP_THRESHOLD && en) begin
                 wfi_stop <= wfi_stop + 1;
             end 
-            else if (last_instr[1] != WFI_INSTRUCTION) begin
+            else if (instr_queue[3] != WFI_INSTRUCTION) begin
                 wfi_stop <= 0;
             end
 
