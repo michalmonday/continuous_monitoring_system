@@ -37,14 +37,7 @@ module continuous_monitoring_system #(
     
     input   logic                                       en,
     input   logic   [NO_OF_PERFORMANCE_EVENTS - 1 : 0]  performance_events,
-    // output wire pc_valid_queue [QUEUE_SIZE-1:0] 
-    output wire trace_filter_pc_valid_probe,
-    output wire [RISC_V_INSTRUCTION_WIDTH-1:0] trace_filter_instr_probe,
-    output wire trace_filter_drop_instr_probe,
-    output wire data_to_axi_write_enable_probe,
-    output wire data_to_axi_write_enable_pc_valid_probe,
-    output wire [XLEN-1:0] data_pkt_pc_probe,
-    output wire [RISC_V_INSTRUCTION_WIDTH-1:0] data_pkt_instr_probe
+    output logic pc_valid_new_probe
 );
     logic drop_instr;
 
@@ -54,15 +47,11 @@ module continuous_monitoring_system #(
     reg [7 : 0] wfi_stop = 0; // it is 2 bits to use it as a counter and control write enable only based on MSB (to delay disabling write by 1 cycle)
     localparam WFI_STOP_THRESHOLD = 255;
 
-    // wire pc_valid = ((pc_queue[0] != pc_queue[1]) || (wfi_stop == WFI_STOP_THRESHOLD - 1)) 
-    //                     & (pc_queue[1] != 0) 
-    //                     & rst_n;
+    wire pc_valid_new = ((last_pc[0] != last_pc[1]) || (wfi_stop == WFI_STOP_THRESHOLD - 1)) 
+                        & (last_pc[1] != 0) 
+                        & rst_n;
 
-
-    localparam QUEUE_SIZE = 6;
-    reg [RISC_V_INSTRUCTION_WIDTH - 1: 0] instr_queue [QUEUE_SIZE-1:0];
-    reg [XLEN - 1 : 0] pc_queue [QUEUE_SIZE-1:0];
-    reg pc_valid_queue [QUEUE_SIZE-1:0];
+    assign pc_valid_new_probe = pc_valid_new;
 
     // monitored address range
     reg monitored_address_range_lower_bound_enabled = 0;
@@ -83,6 +72,8 @@ module continuous_monitoring_system #(
 
     logic [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH - 1 : 0] performance_event_counters[0 : NO_OF_PERFORMANCE_EVENTS - 1];
 
+    reg [RISC_V_INSTRUCTION_WIDTH - 1: 0] last_instr [1:0];
+    reg [XLEN - 1 : 0] last_pc [1:0];
 
     // edge detector allows to detect pos/neg edges of a write enable signal
     // this is useful when this module is controlled by AXI GPIO from Python
@@ -101,14 +92,10 @@ module continuous_monitoring_system #(
     ) trace_filter_inst (
         .clk(clk),
         .rst_n(rst_n),
-        .pc_valid(pc_valid_queue[0]),
-        .next_instr(instr_queue[2]),
+        .pc_valid(pc_valid_new),
+        .next_instr(last_instr[0]),
         .drop_instr(drop_instr)
     );
-
-    assign trace_filter_pc_valid_probe = pc_valid_queue[0];
-    assign trace_filter_instr_probe = instr_queue[2];
-    assign trace_filter_drop_instr_probe = drop_instr;
 
     localparam PC_LOCATION = NO_OF_PERFORMANCE_EVENTS * PERFORMANCE_EVENT_MOD_COUNTER_WIDTH;
     localparam CLK_COUNTER_DELTA_LOCATION = PC_LOCATION + XLEN;
@@ -116,21 +103,15 @@ module continuous_monitoring_system #(
 
     reg [AXI_DATA_WIDTH - 1 : 0] data_pkt = 0;
 
-    reg data_to_axi_write_enable;
-    // wire data_to_axi_write_enable = en &
-    //                                 pc_valid &
-    //                                 ~drop_instr & 
-    //                                 (wfi_stop < WFI_STOP_THRESHOLD) & 
-    //                                 (trigger_trace_start_reached | ~trigger_trace_start_address_enabled) &
-    //                                 (~trigger_trace_end_reached | ~trigger_trace_end_address_enabled) &
-    //                                 (pc_queue[1] >= monitored_address_range_lower_bound | ~monitored_address_range_lower_bound_enabled) &
-    //                                 (pc_queue[1] <= monitored_address_range_upper_bound | ~monitored_address_range_upper_bound_enabled)
-    //                                 ;
-
-    assign data_to_axi_write_enable_probe = data_to_axi_write_enable;
-    assign data_to_axi_write_enable_pc_valid_probe = pc_valid_queue[3];
-    assign data_pkt_pc_probe = pc_queue[4];
-    assign data_pkt_instr_probe = instr_queue[4];
+    wire data_to_axi_write_enable = en &
+                                    pc_valid_new &
+                                    ~drop_instr & 
+                                    (wfi_stop < WFI_STOP_THRESHOLD) & 
+                                    (trigger_trace_start_reached | ~trigger_trace_start_address_enabled) &
+                                    (~trigger_trace_end_reached | ~trigger_trace_end_address_enabled) &
+                                    (last_pc[1] >= monitored_address_range_lower_bound | ~monitored_address_range_lower_bound_enabled) &
+                                    (last_pc[1] <= monitored_address_range_upper_bound | ~monitored_address_range_upper_bound_enabled)
+                                    ;
 
     wire performance_counters_rst_n = ~data_to_axi_write_enable & rst_n; // reset upon write to FIFO
 
@@ -152,7 +133,7 @@ module continuous_monitoring_system #(
         .write_enable(data_to_axi_write_enable),
         .data_pkt(data_pkt),
         .tlast_interval(tlast_interval),
-        .tlast(instr_queue[3] == WFI_INSTRUCTION),
+        .tlast(last_instr[1] == WFI_INSTRUCTION),
         .M_AXIS_tvalid(M_AXIS_tvalid),
         .M_AXIS_tready(M_AXIS_tready),
         .M_AXIS_tdata(M_AXIS_tdata),
@@ -180,36 +161,25 @@ module continuous_monitoring_system #(
             clk_counter <= 0;
             last_write_timestamp <= 0;
 
-            for (int i = 0; i < QUEUE_SIZE; i = i + 1) begin
-                pc_queue[i] <= 0;
-                instr_queue[i] <= 0;
-                pc_valid_queue[i] <= 0;
+            for (int i = 0; i < 2; i = i + 1) begin
+                last_pc[i] <= 0;
+                last_instr[i] <= 0;
             end
 
             data_pkt <= 0;
 
         end
         else begin
-            data_to_axi_write_enable <= en &
-                                       pc_valid_queue[3] &
-                                       ~drop_instr & 
-                                       (wfi_stop < WFI_STOP_THRESHOLD) & 
-                                       (trigger_trace_start_reached | ~trigger_trace_start_address_enabled) &
-                                       (~trigger_trace_end_reached | ~trigger_trace_end_address_enabled) &
-                                       (pc_queue[3] >= monitored_address_range_lower_bound | ~monitored_address_range_lower_bound_enabled) &
-                                       (pc_queue[3] <= monitored_address_range_upper_bound | ~monitored_address_range_upper_bound_enabled)
-                                       ;
-
             clk_counter <= clk_counter + 1;
 
             if (data_to_axi_write_enable) begin
                 last_write_timestamp <= clk_counter;
-            end
+            end 
 
             data_pkt <= {
-                instr_queue[4],
+                last_instr[0],
                 data_to_axi_write_enable ? 64'b1 : clk_counter - last_write_timestamp,  
-                pc_queue[4],
+                last_pc[0],
                 performance_event_counters[0], performance_event_counters[1], performance_event_counters[2], performance_event_counters[3],
                 performance_event_counters[4], performance_event_counters[5], performance_event_counters[6], performance_event_counters[7],
                 performance_event_counters[8], performance_event_counters[9], performance_event_counters[10], performance_event_counters[11],
@@ -222,21 +192,17 @@ module continuous_monitoring_system #(
                 performance_event_counters[36]
                 };
 
-            for (int i = 1; i < QUEUE_SIZE; i = i + 1) begin
-                pc_queue[i] <= pc_queue[i - 1];
-                instr_queue[i] <= instr_queue[i - 1];
-                pc_valid_queue[i] <= pc_valid_queue[i - 1];
-            end
-            pc_queue[0] <= pc;
-            instr_queue[0] <= instr;
-            pc_valid_queue[0] <= ((pc_queue[0] != pc_queue[1]) || (wfi_stop == WFI_STOP_THRESHOLD - 1)) 
-                                 & (pc_queue[1] != 0) 
-                                 & rst_n;
+            last_pc[1] <= last_pc[0];
+            last_instr[1] <= last_instr[0];
 
-            if (instr_queue[3] == WFI_INSTRUCTION && wfi_stop < WFI_STOP_THRESHOLD && en) begin
+            last_pc[0] <= pc;
+            last_instr[0] <= instr;
+
+
+            if (last_instr[1] == WFI_INSTRUCTION && wfi_stop < WFI_STOP_THRESHOLD && en) begin
                 wfi_stop <= wfi_stop + 1;
             end 
-            else if (instr_queue[3] != WFI_INSTRUCTION) begin
+            else if (last_instr[1] != WFI_INSTRUCTION) begin
                 wfi_stop <= 0;
             end
 

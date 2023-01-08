@@ -25,10 +25,6 @@ module trace_filter #(
 
     reg queue_instruction = 1'b0;
     reg send_next_instruction = 1'b0;
-
-    reg branch;
-    reg jump;
-    reg wfi;
     
     // assign branch = (next_instr[6:0] == BRANCH_OPCODE) ||
     //                 (next_instr[1:0] == C_BRANCH_OPCODE && next_instr[15:14] == C_BRANCH_FUNCT3_2_MSB);
@@ -49,29 +45,26 @@ module trace_filter #(
             branch <= 0;
             jump <= 0;
             wfi <= 0;
-            drop_instr <= 1;
-        end else begin
+        end else if (pc_valid) begin
             branch <= (next_instr[6:0] == BRANCH_OPCODE) ||
                      (next_instr[1:0] == C_BRANCH_OPCODE && next_instr[15:14] == C_BRANCH_FUNCT3_2_MSB);
             jump <=  (next_instr[6:0] == JAL_OPCODE) || 
                      (next_instr[6:0] == JALR_OPCODE) ||
                      (next_instr[1:0] == C_JAL_OPCODE && next_instr[15:13] == C_JAL_FUNCT3_3_MSB) ||
                      (next_instr[1:0] == C_JALR_OPCODE && next_instr[15:13] == C_JALR_FUNCT4_3_MSB);
+
+
             wfi <= (next_instr == WFI_INSTRUCTION);
-            drop_instr <= ~(branch || jump || wfi || send_next_instruction); 
+
 
             // queue_instruction <= (branch && SEND_INSTRUCTION_AFTER_BRANCH) || (jump && SEND_INSTRUCTION_AFTER_JUMP) || (wfi && SEND_INSTRUCTION_AFTER_WFI);
             // send_next_instruction <= queue_instruction;
-            // send_next_instruction <= (branch && SEND_INSTRUCTION_AFTER_BRANCH) || (jump && SEND_INSTRUCTION_AFTER_JUMP) || (wfi && SEND_INSTRUCTION_AFTER_WFI);
-
-            if (pc_valid) begin
-                send_next_instruction <= (branch && SEND_INSTRUCTION_AFTER_BRANCH) || (jump && SEND_INSTRUCTION_AFTER_JUMP) || (wfi && SEND_INSTRUCTION_AFTER_WFI);
-            end
+            send_next_instruction <= (branch && SEND_INSTRUCTION_AFTER_BRANCH) || (jump && SEND_INSTRUCTION_AFTER_JUMP) || (wfi && SEND_INSTRUCTION_AFTER_WFI);
         end
     end
         
 
-    // assign drop_instr = ~(branch || jump  || wfi || send_next_instruction);
+    assign drop_instr = ~(branch || jump  || wfi || send_next_instruction);
         
     
 endmodule
