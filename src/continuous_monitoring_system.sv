@@ -36,9 +36,15 @@ module continuous_monitoring_system #(
     // this may be connected to the GPIO rst_n (the same one used to reset the processor)
     
     input   logic                                       en,
-    input   logic   [NO_OF_PERFORMANCE_EVENTS - 1 : 0]  performance_events
-    // output wire data_to_axi_write_enable_probe,
+    input   logic   [NO_OF_PERFORMANCE_EVENTS - 1 : 0]  performance_events,
     // output wire pc_valid_queue [QUEUE_SIZE-1:0] 
+    output wire trace_filter_pc_valid_probe,
+    output wire trace_filter_instr_probe,
+    output wire trace_filter_instr_valid_probe,
+    output wire data_to_axi_write_enable_probe,
+    output wire data_to_axi_write_enable_pc_valid_probe,
+    output wire data_pkt_pc_probe,
+    output wire data_pkt_instr_probe
 );
     logic drop_instr;
 
@@ -100,6 +106,10 @@ module continuous_monitoring_system #(
         .drop_instr(drop_instr)
     );
 
+    assign trace_filter_pc_valid_probe = pc_valid_queue[0];
+    assign trace_filter_instr_probe = instr_queue[2];
+    assign trace_filter_drop_instr_probe = drop_instr;
+
     localparam PC_LOCATION = NO_OF_PERFORMANCE_EVENTS * PERFORMANCE_EVENT_MOD_COUNTER_WIDTH;
     localparam CLK_COUNTER_DELTA_LOCATION = PC_LOCATION + XLEN;
     localparam INSTR_LOCATION = CLK_COUNTER_DELTA_LOCATION + CLK_COUNTER_WIDTH;
@@ -117,7 +127,10 @@ module continuous_monitoring_system #(
     //                                 (pc_queue[1] <= monitored_address_range_upper_bound | ~monitored_address_range_upper_bound_enabled)
     //                                 ;
 
-    // wire data_to_axi_write_enable_probe = data_to_axi_write_enable;
+    assign data_to_axi_write_enable_probe = data_to_axi_write_enable;
+    assign data_to_axi_write_enable_pc_valid_probe = pc_valid_queue[3];
+    assign data_pkt_pc_probe = pc_queue[4];
+    assign data_pkt_instr_probe = instr_queue[4];
 
     wire performance_counters_rst_n = ~data_to_axi_write_enable & rst_n; // reset upon write to FIFO
 

@@ -36,7 +36,14 @@ module cms_ip_wrapper #(
     // enable the module (if disabled, the module will not send any data to the FIFO)
     // this may be connected to the GPIO rst_n (the same one used to reset the processor)
     input en,
-    input [`NO_OF_PERFORMANCE_EVENTS-1:0]performance_events
+    input [`NO_OF_PERFORMANCE_EVENTS-1:0]performance_events,
+    output wire trace_filter_pc_valid_probe,
+    output wire trace_filter_instr_probe,
+    output wire trace_filter_instr_valid_probe,
+    output wire data_to_axi_write_enable_probe,
+    output wire data_to_axi_write_enable_pc_valid_probe,
+    output wire data_pkt_pc_probe,
+    output wire data_pkt_instr_probe
 );
 
 continuous_monitoring_system #(
@@ -65,7 +72,15 @@ continuous_monitoring_system #(
     // enable the module (if disabled, the module will not send any data to the FIFO)
     // this may be connected to the GPIO rst_n (the same one used to reset the processor)
     .en(en),
-    .performance_events(performance_events)
+    .performance_events(performance_events),
+
+    .trace_filter_pc_valid_probe(trace_filter_pc_valid_probe),
+    .trace_filter_instr_probe(trace_filter_instr_probe),
+    .trace_filter_instr_valid_probe(trace_filter_instr_valid_probe),
+    .data_to_axi_write_enable_probe(data_to_axi_write_enable_probe),
+    .data_to_axi_write_enable_pc_valid_probe(data_to_axi_write_enable_pc_valid_probe),
+    .data_pkt_pc_probe(data_pkt_pc_probe),
+    .data_pkt_instr_probe(data_pkt_instr_probe)
 );
 
 endmodule
