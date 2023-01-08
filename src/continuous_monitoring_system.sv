@@ -39,12 +39,12 @@ module continuous_monitoring_system #(
     input   logic   [NO_OF_PERFORMANCE_EVENTS - 1 : 0]  performance_events,
     // output wire pc_valid_queue [QUEUE_SIZE-1:0] 
     output wire trace_filter_pc_valid_probe,
-    output wire trace_filter_instr_probe,
-    output wire trace_filter_instr_valid_probe,
+    output wire [RISC_V_INSTRUCTION_WIDTH-1:0] trace_filter_instr_probe,
+    output wire trace_filter_drop_instr_probe,
     output wire data_to_axi_write_enable_probe,
     output wire data_to_axi_write_enable_pc_valid_probe,
-    output wire data_pkt_pc_probe,
-    output wire data_pkt_instr_probe
+    output wire [XLEN-1:0] data_pkt_pc_probe,
+    output wire [RISC_V_INSTRUCTION_WIDTH-1:0] data_pkt_instr_probe
 );
     logic drop_instr;
 

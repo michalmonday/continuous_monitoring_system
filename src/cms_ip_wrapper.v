@@ -38,12 +38,12 @@ module cms_ip_wrapper #(
     input en,
     input [`NO_OF_PERFORMANCE_EVENTS-1:0]performance_events,
     output wire trace_filter_pc_valid_probe,
-    output wire trace_filter_instr_probe,
-    output wire trace_filter_instr_valid_probe,
+    output wire [31:0] trace_filter_instr_probe,
+    output wire trace_filter_drop_instr_probe,
     output wire data_to_axi_write_enable_probe,
     output wire data_to_axi_write_enable_pc_valid_probe,
-    output wire data_pkt_pc_probe,
-    output wire data_pkt_instr_probe
+    output wire [`XLEN-1:0] data_pkt_pc_probe,
+    output wire [31:0] data_pkt_instr_probe
 );
 
 continuous_monitoring_system #(
@@ -76,7 +76,7 @@ continuous_monitoring_system #(
 
     .trace_filter_pc_valid_probe(trace_filter_pc_valid_probe),
     .trace_filter_instr_probe(trace_filter_instr_probe),
-    .trace_filter_instr_valid_probe(trace_filter_instr_valid_probe),
+    .trace_filter_drop_instr_probe(trace_filter_drop_instr_probe),
     .data_to_axi_write_enable_probe(data_to_axi_write_enable_probe),
     .data_to_axi_write_enable_pc_valid_probe(data_to_axi_write_enable_pc_valid_probe),
     .data_pkt_pc_probe(data_pkt_pc_probe),
