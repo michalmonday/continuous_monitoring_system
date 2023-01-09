@@ -97,7 +97,9 @@ module continuous_monitoring_system #(
         .drop_instr(drop_instr)
     );
 
-    localparam PC_LOCATION = NO_OF_PERFORMANCE_EVENTS * PERFORMANCE_EVENT_MOD_COUNTER_WIDTH;
+    localparam PERFORMANCE_COUNTERS_LOCATION = 0;
+    localparam PERFORMANCE_COUNTERS_OVERFLOW_MAP_LOCATION = NO_OF_PERFORMANCE_EVENTS * PERFORMANCE_EVENT_MOD_COUNTER_WIDTH;
+    localparam PC_LOCATION = PERFORMANCE_COUNTERS_OVERFLOW_MAP_LOCATION + NO_OF_PERFORMANCE_EVENTS;
     localparam CLK_COUNTER_DELTA_LOCATION = PC_LOCATION + XLEN;
     localparam INSTR_LOCATION = CLK_COUNTER_DELTA_LOCATION + CLK_COUNTER_WIDTH;
 
@@ -114,6 +116,7 @@ module continuous_monitoring_system #(
                                     ;
 
     wire performance_counters_rst_n = ~data_to_axi_write_enable & rst_n; // reset upon write to FIFO
+    wire performance_counters_overflow_map;
 
     performance_event_counters #(
         .INPUT_EVENT_BITMAP_WIDTH(NO_OF_PERFORMANCE_EVENTS),
@@ -122,7 +125,8 @@ module continuous_monitoring_system #(
         .clk(clk),
         .rst_n(performance_counters_rst_n),
         .performance_events(performance_events), // input bitmap (each bit is indicating if the corresponding performance event happens now)
-        .counters(performance_event_counters)  // output counters
+        .counters(performance_event_counters),  // output counters
+        .overflow_map(performance_counters_overflow_map) // output bitmap (each bit is indicating if the corresponding performance counter overflowed)
     );
 
     data_to_axi_stream #(
@@ -180,6 +184,7 @@ module continuous_monitoring_system #(
                 last_instr[0],
                 data_to_axi_write_enable ? 64'b1 : clk_counter - last_write_timestamp,  
                 last_pc[0],
+                performance_counters_overflow_map,
                 performance_event_counters[0], performance_event_counters[1], performance_event_counters[2], performance_event_counters[3],
                 performance_event_counters[4], performance_event_counters[5], performance_event_counters[6], performance_event_counters[7],
                 performance_event_counters[8], performance_event_counters[9], performance_event_counters[10], performance_event_counters[11],
