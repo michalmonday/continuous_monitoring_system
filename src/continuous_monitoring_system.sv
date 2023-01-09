@@ -42,6 +42,8 @@ module continuous_monitoring_system #(
     output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] branch_counter_probe1,
     output wire jal_event_probe1,
     output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] jal_counter_probe1,
+    output wire auipc_event_probe1,
+    output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] auipc_counter_probe1,
     output wire performance_counters_rst_n_probe
 );
     logic drop_instr;
@@ -76,10 +78,12 @@ module continuous_monitoring_system #(
     reg     [CLK_COUNTER_WIDTH - 1 : 0] last_write_timestamp = 0;
 
     logic [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH - 1 : 0] performance_event_counters[NO_OF_PERFORMANCE_EVENTS - 1:0];
-    assign branch_counter_probe1 = performance_event_counters[3];
-    assign branch_event_probe1 = performance_events[3];
-    assign jal_counter_probe1 = performance_event_counters[4];
-    assign jal_event_probe1 = performance_events[4];
+    assign branch_counter_probe1 = performance_event_counters[0];
+    assign branch_event_probe1 = performance_events[0];
+    assign jal_counter_probe1 = performance_event_counters[1];
+    assign jal_event_probe1 = performance_events[1];
+    assign auipc_counter_probe1 = performance_event_counters[3];
+    assign auipc_event_probe1 = performance_events[3];
 
     reg [RISC_V_INSTRUCTION_WIDTH - 1: 0] last_instr [1:0];
     reg [XLEN - 1 : 0] last_pc [1:0];
