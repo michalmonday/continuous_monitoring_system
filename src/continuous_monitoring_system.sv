@@ -37,7 +37,15 @@ module continuous_monitoring_system #(
     
     input   logic                                       en,
     input   logic   [NO_OF_PERFORMANCE_EVENTS - 1 : 0]  performance_events,
-    output logic pc_valid_new_probe
+    output logic pc_valid_new_probe,
+    output wire branch_event_probe1,
+    output wire branch_event_probe2,
+    output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] branch_counter_probe1,
+    output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] branch_counter_probe2,
+    output wire jal_event_probe1,
+    output wire jal_event_probe2,
+    output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] jal_counter_probe1,
+    output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] jal_counter_probe2
 );
     logic drop_instr;
 
@@ -71,6 +79,14 @@ module continuous_monitoring_system #(
     reg     [CLK_COUNTER_WIDTH - 1 : 0] last_write_timestamp = 0;
 
     logic [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH - 1 : 0] performance_event_counters[0 : NO_OF_PERFORMANCE_EVENTS - 1];
+    assign branch_counter_probe1 = performance_event_counters[3];
+    assign branch_counter_probe2 = performance_event_counters[33];
+    assign branch_event_probe1 = performance_events[3];
+    assign branch_event_probe2 = performance_events[33];
+    assign jal_counter_probe1 = performance_event_counters[4];
+    assign jal_counter_probe2 = performance_event_counters[32];
+    assign jal_event_probe1 = performance_events[4];
+    assign jal_event_probe2 = performance_events[32];
 
     reg [RISC_V_INSTRUCTION_WIDTH - 1: 0] last_instr [1:0];
     reg [XLEN - 1 : 0] last_pc [1:0];

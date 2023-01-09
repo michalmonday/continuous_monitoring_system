@@ -6,6 +6,7 @@ in SystemVerilog. This is just a workaround.
 `define CTRL_ADDR_WIDTH 8 // internal addressing (each of 256 addresses can result in a different action upon writing/reading)
 `define CTRL_DATA_WIDTH 64 // control data width, the functionality of the module is controlled by writing to address+data ports
 `define NO_OF_PERFORMANCE_EVENTS 37
+`define PERFORMANCE_COUNTER_MOD_WIDTH 7
 `define XLEN 64
 `define AXI_DATA_WIDTH 512
 
@@ -36,7 +37,16 @@ module cms_ip_wrapper #(
     // enable the module (if disabled, the module will not send any data to the FIFO)
     // this may be connected to the GPIO rst_n (the same one used to reset the processor)
     input en,
-    input [`NO_OF_PERFORMANCE_EVENTS-1:0]performance_events
+    input [`NO_OF_PERFORMANCE_EVENTS-1:0]performance_events,
+
+    output wire branch_event_probe1,
+    output wire branch_event_probe2,
+    output wire [`PERFORMANCE_COUNTER_MOD_WIDTH-1:0] branch_counter_probe1,
+    output wire [`PERFORMANCE_COUNTER_MOD_WIDTH-1:0] branch_counter_probe2,
+    output wire jal_event_probe1,
+    output wire jal_event_probe2,
+    output wire [`PERFORMANCE_COUNTER_MOD_WIDTH-1:0] jal_counter_probe1,
+    output wire [`PERFORMANCE_COUNTER_MOD_WIDTH-1:0] jal_counter_probe2
 );
 
 continuous_monitoring_system #(
@@ -65,7 +75,15 @@ continuous_monitoring_system #(
     // enable the module (if disabled, the module will not send any data to the FIFO)
     // this may be connected to the GPIO rst_n (the same one used to reset the processor)
     .en(en),
-    .performance_events(performance_events)
+    .performance_events(performance_events),
+    .branch_event_probe1(branch_event_probe1),
+    .branch_event_probe2(branch_event_probe2),
+    .branch_counter_probe1(branch_counter_probe1),
+    .branch_counter_probe2(branch_counter_probe2),
+    .jal_event_probe1(jal_event_probe1),
+    .jal_event_probe2(jal_event_probe2),
+    .jal_counter_probe1(jal_counter_probe1),
+    .jal_counter_probe2(jal_counter_probe2)
 );
 
 endmodule
