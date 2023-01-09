@@ -38,17 +38,20 @@ module continuous_monitoring_system #(
     input   logic                                       en,
     input   logic   [NO_OF_PERFORMANCE_EVENTS - 1 : 0]  performance_events,
     output logic pc_valid_new_probe,
+
     output wire branch_event_probe1,
-    output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] branch_counter_probe1,
     output wire jal_event_probe1,
-    output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] jal_counter_probe1,
     output wire auipc_event_probe1,
+    output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] branch_counter_probe1,
+    output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] jal_counter_probe1,
     output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] auipc_counter_probe1,
+
     output wire [RISC_V_INSTRUCTION_WIDTH:0] data_pkt_instr_probe,
     output wire [XLEN-1:0] data_pkt_pc_probe,
     output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] data_pkt_branch_counter_probe,
     output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] data_pkt_jal_counter_probe,
     output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] data_pkt_auipc_counter_probe,
+
     output wire performance_counters_rst_n_probe
 );
     logic drop_instr;

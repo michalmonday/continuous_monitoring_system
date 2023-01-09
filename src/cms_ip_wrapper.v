@@ -41,14 +41,18 @@ module cms_ip_wrapper #(
     input [`NO_OF_PERFORMANCE_EVENTS-1:0]performance_events,
 
     output wire branch_event_probe1,
-    output wire [`PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] branch_counter_probe1,
     output wire jal_event_probe1,
+    output wire auipc_event_probe1,
+    output wire [`PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] branch_counter_probe1,
     output wire [`PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] jal_counter_probe1,
+    output wire [`PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] auipc_counter_probe1,
+
     output wire [`RISC_V_INSTRUCTION_WIDTH:0] data_pkt_instr_probe,
     output wire [`XLEN-1:0] data_pkt_pc_probe,
     output wire [`PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] data_pkt_branch_counter_probe,
     output wire [`PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] data_pkt_jal_counter_probe,
     output wire [`PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] data_pkt_auipc_counter_probe,
+
     output wire performance_counters_rst_n_probe
 );
 
@@ -79,15 +83,20 @@ continuous_monitoring_system #(
     // this may be connected to the GPIO rst_n (the same one used to reset the processor)
     .en(en),
     .performance_events(performance_events),
+
     .branch_event_probe1(branch_event_probe1),
-    .branch_counter_probe1(branch_counter_probe1),
     .jal_event_probe1(jal_event_probe1),
+    .auipc_event_probe1(auipc_event_probe1),
+    .branch_counter_probe1(branch_counter_probe1),
     .jal_counter_probe1(jal_counter_probe1),
+    .auipc_counter_probe1(auipc_counter_probe1),
+
     .data_pkt_instr_probe(data_pkt_instr_probe),
     .data_pkt_pc_probe(data_pkt_pc_probe),
     .data_pkt_branch_counter_probe(data_pkt_branch_counter_probe),
     .data_pkt_jal_counter_probe(data_pkt_jal_counter_probe),
     .data_pkt_auipc_counter_probe(data_pkt_auipc_counter_probe),
+
     .performance_counters_rst_n_probe(performance_counters_rst_n_probe)
 );
 
