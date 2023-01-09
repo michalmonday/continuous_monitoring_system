@@ -39,13 +39,10 @@ module continuous_monitoring_system #(
     input   logic   [NO_OF_PERFORMANCE_EVENTS - 1 : 0]  performance_events,
     output logic pc_valid_new_probe,
     output wire branch_event_probe1,
-    output wire branch_event_probe2,
     output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] branch_counter_probe1,
-    output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] branch_counter_probe2,
     output wire jal_event_probe1,
-    output wire jal_event_probe2,
     output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] jal_counter_probe1,
-    output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] jal_counter_probe2
+    output wire performance_counters_rst_n_probe
 );
     logic drop_instr;
 
@@ -78,15 +75,11 @@ module continuous_monitoring_system #(
     reg     [CLK_COUNTER_WIDTH - 1 : 0] clk_counter = 0;
     reg     [CLK_COUNTER_WIDTH - 1 : 0] last_write_timestamp = 0;
 
-    logic [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH - 1 : 0] performance_event_counters[0 : NO_OF_PERFORMANCE_EVENTS - 1];
+    logic [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH - 1 : 0] performance_event_counters[NO_OF_PERFORMANCE_EVENTS - 1:0];
     assign branch_counter_probe1 = performance_event_counters[3];
-    assign branch_counter_probe2 = performance_event_counters[33];
     assign branch_event_probe1 = performance_events[3];
-    assign branch_event_probe2 = performance_events[33];
     assign jal_counter_probe1 = performance_event_counters[4];
-    assign jal_counter_probe2 = performance_event_counters[32];
     assign jal_event_probe1 = performance_events[4];
-    assign jal_event_probe2 = performance_events[32];
 
     reg [RISC_V_INSTRUCTION_WIDTH - 1: 0] last_instr [1:0];
     reg [XLEN - 1 : 0] last_pc [1:0];
@@ -132,6 +125,7 @@ module continuous_monitoring_system #(
                                     ;
 
     wire performance_counters_rst_n = ~data_to_axi_write_enable & rst_n; // reset upon write to FIFO
+    assign performance_counters_rst_n_probe = performance_counters_rst_n;
     wire [NO_OF_PERFORMANCE_EVENTS-1:0] performance_counters_overflow_map;
 
     performance_event_counters #(
@@ -203,17 +197,26 @@ module continuous_monitoring_system #(
                 performance_counters_overflow_map,
                 // {<<PERFORMANCE_EVENT_MOD_COUNTER_WIDTH{performance_event_counters}} // "reverse elements of a byte array and pack them into an int"
                 // {>>{performance_event_counters}}
-
-                performance_event_counters[0], performance_event_counters[1], performance_event_counters[2], performance_event_counters[3],
-                performance_event_counters[4], performance_event_counters[5], performance_event_counters[6], performance_event_counters[7],
-                performance_event_counters[8], performance_event_counters[9], performance_event_counters[10], performance_event_counters[11],
-                performance_event_counters[12], performance_event_counters[13], performance_event_counters[14], performance_event_counters[15],
-                performance_event_counters[16], performance_event_counters[17], performance_event_counters[18], performance_event_counters[19],
-                performance_event_counters[20], performance_event_counters[21], performance_event_counters[22], performance_event_counters[23],
-                performance_event_counters[24], performance_event_counters[25], performance_event_counters[26], performance_event_counters[27],
-                performance_event_counters[28], performance_event_counters[29], performance_event_counters[30], performance_event_counters[31],
-                performance_event_counters[32], performance_event_counters[33], performance_event_counters[34], performance_event_counters[35],
-                performance_event_counters[36]
+                // performance_event_counters[0], performance_event_counters[1], performance_event_counters[2], performance_event_counters[3],
+                // performance_event_counters[4], performance_event_counters[5], performance_event_counters[6], performance_event_counters[7],
+                // performance_event_counters[8], performance_event_counters[9], performance_event_counters[10], performance_event_counters[11],
+                // performance_event_counters[12], performance_event_counters[13], performance_event_counters[14], performance_event_counters[15],
+                // performance_event_counters[16], performance_event_counters[17], performance_event_counters[18], performance_event_counters[19],
+                // performance_event_counters[20], performance_event_counters[21], performance_event_counters[22], performance_event_counters[23],
+                // performance_event_counters[24], performance_event_counters[25], performance_event_counters[26], performance_event_counters[27],
+                // performance_event_counters[28], performance_event_counters[29], performance_event_counters[30], performance_event_counters[31],
+                // performance_event_counters[32], performance_event_counters[33], performance_event_counters[34], performance_event_counters[35],
+                // performance_event_counters[36]
+                performance_event_counters[36], performance_event_counters[35], performance_event_counters[34], performance_event_counters[33],
+                performance_event_counters[32], performance_event_counters[31], performance_event_counters[30], performance_event_counters[29],
+                performance_event_counters[28], performance_event_counters[27], performance_event_counters[26], performance_event_counters[25],
+                performance_event_counters[24], performance_event_counters[23], performance_event_counters[22], performance_event_counters[21],
+                performance_event_counters[20], performance_event_counters[19], performance_event_counters[18], performance_event_counters[17],
+                performance_event_counters[16], performance_event_counters[15], performance_event_counters[14], performance_event_counters[13],
+                performance_event_counters[12], performance_event_counters[11], performance_event_counters[10], performance_event_counters[9],
+                performance_event_counters[8], performance_event_counters[7], performance_event_counters[6], performance_event_counters[5],
+                performance_event_counters[4], performance_event_counters[3], performance_event_counters[2], performance_event_counters[1],
+                performance_event_counters[0]
                 };
 
             last_pc[1] <= last_pc[0];

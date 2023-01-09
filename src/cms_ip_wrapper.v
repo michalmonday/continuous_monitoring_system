@@ -40,13 +40,10 @@ module cms_ip_wrapper #(
     input [`NO_OF_PERFORMANCE_EVENTS-1:0]performance_events,
 
     output wire branch_event_probe1,
-    output wire branch_event_probe2,
     output wire [`PERFORMANCE_COUNTER_MOD_WIDTH-1:0] branch_counter_probe1,
-    output wire [`PERFORMANCE_COUNTER_MOD_WIDTH-1:0] branch_counter_probe2,
     output wire jal_event_probe1,
-    output wire jal_event_probe2,
     output wire [`PERFORMANCE_COUNTER_MOD_WIDTH-1:0] jal_counter_probe1,
-    output wire [`PERFORMANCE_COUNTER_MOD_WIDTH-1:0] jal_counter_probe2
+    output wire performance_counters_rst_n_probe
 );
 
 continuous_monitoring_system #(
@@ -77,13 +74,10 @@ continuous_monitoring_system #(
     .en(en),
     .performance_events(performance_events),
     .branch_event_probe1(branch_event_probe1),
-    .branch_event_probe2(branch_event_probe2),
     .branch_counter_probe1(branch_counter_probe1),
-    .branch_counter_probe2(branch_counter_probe2),
     .jal_event_probe1(jal_event_probe1),
-    .jal_event_probe2(jal_event_probe2),
     .jal_counter_probe1(jal_counter_probe1),
-    .jal_counter_probe2(jal_counter_probe2)
+    .performance_counters_rst_n_probe(performance_counters_rst_n_probe)
 );
 
 endmodule
