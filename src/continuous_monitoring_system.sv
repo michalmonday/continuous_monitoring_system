@@ -116,7 +116,7 @@ module continuous_monitoring_system #(
                                     ;
 
     wire performance_counters_rst_n = ~data_to_axi_write_enable & rst_n; // reset upon write to FIFO
-    wire performance_counters_overflow_map;
+    wire [NO_OF_PERFORMANCE_EVENTS-1:0] performance_counters_overflow_map;
 
     performance_event_counters #(
         .INPUT_EVENT_BITMAP_WIDTH(NO_OF_PERFORMANCE_EVENTS),
@@ -185,6 +185,9 @@ module continuous_monitoring_system #(
                 data_to_axi_write_enable ? 64'b1 : clk_counter - last_write_timestamp,  
                 last_pc[0],
                 performance_counters_overflow_map,
+                // {<<PERFORMANCE_EVENT_MOD_COUNTER_WIDTH{performance_event_counters}} // "reverse elements of a byte array and pack them into an int"
+                // {>>{performance_event_counters}}
+
                 performance_event_counters[0], performance_event_counters[1], performance_event_counters[2], performance_event_counters[3],
                 performance_event_counters[4], performance_event_counters[5], performance_event_counters[6], performance_event_counters[7],
                 performance_event_counters[8], performance_event_counters[9], performance_event_counters[10], performance_event_counters[11],
