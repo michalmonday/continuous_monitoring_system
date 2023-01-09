@@ -77,13 +77,17 @@ module continuous_monitoring_system #(
     );
 
     trace_filter #(
-        .SEND_INSTRUCTION_AFTER_BRANCH(0),
-        .SEND_INSTRUCTION_AFTER_JUMP(0),
-        .SEND_INSTRUCTION_AFTER_WFI(0)
+        .SEND_INSTRUCTION_AFTER_BRANCH(1),
+        .SEND_INSTRUCTION_AFTER_JUMP(1),
+        .SEND_INSTRUCTION_AFTER_WFI(1),
+        .SEND_INSTRUCTION_AFTER_TRAP(1),
+        .SEND_INSTRUCTION_AFTER_INTERRUPT(1)
     ) trace_filter_inst (
         .clk(clk),
         .rst_n(rst_n),
         .pc_valid(pc_valid),
+        .trap_counter(performance_event_counters[2]), // Core__TRAP
+        .interrupt_counter(performance_event_counters[30]), // Core__INTERRUPT
         .instr(instr),
         .drop_instr(drop_instr)
     );
