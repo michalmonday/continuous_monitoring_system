@@ -18,11 +18,11 @@ module performance_event_counters #(
 
     integer i;
 
-	always @(posedge clk or negedge rst_n) begin
+	always @(posedge clk) begin
         if (~rst_n) begin
             for (i = 0; i < INPUT_EVENT_BITMAP_WIDTH; i=i+1) begin
-                // r_counters[i] <= performance_events[i];
-                r_counters[i] <= 0;
+                r_counters[i] <= performance_events[i];
+                // r_counters[i] <= 0;
             end
             r_overflow_map <= 0;
         end else begin
