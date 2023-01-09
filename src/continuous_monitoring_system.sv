@@ -44,6 +44,11 @@ module continuous_monitoring_system #(
     output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] jal_counter_probe1,
     output wire auipc_event_probe1,
     output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] auipc_counter_probe1,
+    output wire [RISC_V_INSTRUCTION_WIDTH:0] data_pkt_instr_probe,
+    output wire [XLEN-1:0] data_pkt_pc_probe,
+    output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] data_pkt_branch_counter_probe,
+    output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] data_pkt_jal_counter_probe,
+    output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] data_pkt_auipc_counter_probe,
     output wire performance_counters_rst_n_probe
 );
     logic drop_instr;
@@ -117,6 +122,14 @@ module continuous_monitoring_system #(
     localparam INSTR_LOCATION = CLK_COUNTER_DELTA_LOCATION + CLK_COUNTER_WIDTH;
 
     reg [AXI_DATA_WIDTH - 1 : 0] data_pkt = 0;
+    assign data_pkt_instr_probe = data_pkt[INSTR_LOCATION + RISC_V_INSTRUCTION_WIDTH - 1 : INSTR_LOCATION];
+    assign data_pkt_pc_probe = data_pkt[PC_LOCATION + XLEN - 1 : PC_LOCATION];
+    localparam BRANCH_INDEX = 0;
+    localparam JAL_INDEX = 1;
+    localparam AUIPC_INDEX = 3;
+    assign data_pkt_jal_counter_probe = data_pkt[PERFORMANCE_COUNTERS_LOCATION + PERFORMANCE_EVENT_MOD_COUNTER_WIDTH*(JAL_INDEX+1) - 1 : PERFORMANCE_COUNTERS_LOCATION+PERFORMANCE_EVENT_MOD_COUNTER_WIDTH*JAL_INDEX];
+    assign data_pkt_branch_counter_probe = data_pkt[PERFORMANCE_COUNTERS_LOCATION + PERFORMANCE_EVENT_MOD_COUNTER_WIDTH*(BRANCH_INDEX+1) - 1 : PERFORMANCE_COUNTERS_LOCATION+PERFORMANCE_EVENT_MOD_COUNTER_WIDTH*BRANCH_INDEX];
+    assign data_pkt_auipc_counter_probe = data_pkt[PERFORMANCE_COUNTERS_LOCATION + PERFORMANCE_EVENT_MOD_COUNTER_WIDTH*(AUIPC_INDEX+1) - 1 : PERFORMANCE_COUNTERS_LOCATION+PERFORMANCE_EVENT_MOD_COUNTER_WIDTH*AUIPC_INDEX];
 
     wire data_to_axi_write_enable = en &
                                     pc_valid_new &

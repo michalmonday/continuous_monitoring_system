@@ -6,9 +6,10 @@ in SystemVerilog. This is just a workaround.
 `define CTRL_ADDR_WIDTH 8 // internal addressing (each of 256 addresses can result in a different action upon writing/reading)
 `define CTRL_DATA_WIDTH 64 // control data width, the functionality of the module is controlled by writing to address+data ports
 `define NO_OF_PERFORMANCE_EVENTS 37
-`define PERFORMANCE_COUNTER_MOD_WIDTH 7
+`define PERFORMANCE_EVENT_MOD_COUNTER_WIDTH 7
 `define XLEN 64
 `define AXI_DATA_WIDTH 512
+`define RISC_V_INSTRUCTION_WIDTH 32
 
 
 module cms_ip_wrapper #(
@@ -40,9 +41,14 @@ module cms_ip_wrapper #(
     input [`NO_OF_PERFORMANCE_EVENTS-1:0]performance_events,
 
     output wire branch_event_probe1,
-    output wire [`PERFORMANCE_COUNTER_MOD_WIDTH-1:0] branch_counter_probe1,
+    output wire [`PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] branch_counter_probe1,
     output wire jal_event_probe1,
-    output wire [`PERFORMANCE_COUNTER_MOD_WIDTH-1:0] jal_counter_probe1,
+    output wire [`PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] jal_counter_probe1,
+    output wire [`RISC_V_INSTRUCTION_WIDTH:0] data_pkt_instr_probe,
+    output wire [`XLEN-1:0] data_pkt_pc_probe,
+    output wire [`PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] data_pkt_branch_counter_probe,
+    output wire [`PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] data_pkt_jal_counter_probe,
+    output wire [`PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] data_pkt_auipc_counter_probe,
     output wire performance_counters_rst_n_probe
 );
 
@@ -77,6 +83,11 @@ continuous_monitoring_system #(
     .branch_counter_probe1(branch_counter_probe1),
     .jal_event_probe1(jal_event_probe1),
     .jal_counter_probe1(jal_counter_probe1),
+    .data_pkt_instr_probe(data_pkt_instr_probe),
+    .data_pkt_pc_probe(data_pkt_pc_probe),
+    .data_pkt_branch_counter_probe(data_pkt_branch_counter_probe),
+    .data_pkt_jal_counter_probe(data_pkt_jal_counter_probe),
+    .data_pkt_auipc_counter_probe(data_pkt_auipc_counter_probe),
     .performance_counters_rst_n_probe(performance_counters_rst_n_probe)
 );
 
