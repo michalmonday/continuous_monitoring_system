@@ -128,7 +128,8 @@ module continuous_monitoring_system #(
 
     wire [AXI_DATA_WIDTH - 1 : 0]data_pkt = {
         last_instr[1],
-        data_to_axi_write_enable ? 64'b1 : clk_counter - last_write_timestamp,  
+        // data_to_axi_write_enable ? 64'b1 : clk_counter - last_write_timestamp,  
+        clk_counter - last_write_timestamp,  
         last_pc[1],
         performance_counters_overflow_map,
         // {<<PERFORMANCE_EVENT_MOD_COUNTER_WIDTH{performance_event_counters}} // "reverse elements of a byte array and pack them into an int"
