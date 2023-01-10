@@ -17,6 +17,9 @@ module dut_trace_filter;
     logic                                       rst_n;
     logic                                       pc_valid;
 
+    logic   [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH - 1 : 0]   trap_counter; // HPM Counter 2
+    logic   [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH - 1 : 0]   interrupt_counter; // HPM Counter 30
+
     logic   [RISC_V_INSTRUCTION_WIDTH - 1 : 0]  instr;
 
     logic                                       drop_instr;
@@ -25,14 +28,18 @@ module dut_trace_filter;
     integer i;
 
     trace_filter #(
-        .SEND_INSTRUCTION_AFTER_BRANCH(1),
+        .SEND_INSTRUCTION_AFTER_BRANCH(0),
         .SEND_INSTRUCTION_AFTER_JUMP(0),
-        .SEND_INSTRUCTION_AFTER_WFI(1)
+        .SEND_INSTRUCTION_AFTER_WFI(0),
+        .SEND_INSTRUCTION_AFTER_TRAP(0),
+        .SEND_INSTRUCTION_AFTER_INTERRUPT(1)
     ) dut 
     (
         .clk(clk),
         .rst_n(rst_n),
         .pc_valid(pc_valid),
+        .trap_counter(trap_counter),
+        .interrupt_counter(interrupt_counter),
         .instr(instr),
         .drop_instr(drop_instr));
 
@@ -51,6 +58,9 @@ module dut_trace_filter;
         clk = 1'b1;
         pc_valid = 1'b1;
         rst_n = 1'b1;
+
+        trap_counter = PERFORMANCE_EVENT_MOD_COUNTER_WIDTH'('b0);
+        interrupt_counter = PERFORMANCE_EVENT_MOD_COUNTER_WIDTH'('b0);
 
         instr = RISC_V_INSTRUCTION_WIDTH'('b0);
 
@@ -100,7 +110,28 @@ module dut_trace_filter;
 
         #period;
 
-        $stop;
+        pc_valid = 1'b1;
+        instr = 32'b00000000000100110000000000010011; // Add Instruction
+
+        #period;
+
+        interrupt_counter = interrupt_counter + 1; // Interrupt happens
+        pc_valid = 0;
+
+        #period; // Testing Send Instruction after Interrupt
+        instr = 32'hAAAAAAAA;
+        #period;
+        instr = 32'hBBBBBBBB;
+        #period;
+        instr = 32'hCCCCCCCC;
+        #period;
+
+        pc_valid = 1;
+        instr = 32'hDDDDDDDD;
+
+        #period;
+        instr = 32'b00000000000100110000000000010011; // Add Instruction
+
     end
 
     
