@@ -118,7 +118,7 @@ module continuous_monitoring_system #(
         .pc_valid(pc_valid_new),
         .trap_counter(performance_event_counters[0]), // Core__TRAP
         .interrupt_counter(performance_event_counters[13]), // Core__INTERRUPT
-        .instr(last_instr[0]),
+        .next_instr(last_instr[0]),
         .drop_instr(drop_instr)
     );
 
