@@ -5,9 +5,11 @@ in SystemVerilog. This is just a workaround.
 */
 `define CTRL_ADDR_WIDTH 8 // internal addressing (each of 256 addresses can result in a different action upon writing/reading)
 `define CTRL_DATA_WIDTH 64 // control data width, the functionality of the module is controlled by writing to address+data ports
-`define NO_OF_PERFORMANCE_EVENTS 115
+`define NO_OF_PERFORMANCE_EVENTS 39
+`define PERFORMANCE_EVENT_MOD_COUNTER_WIDTH 7
 `define XLEN 64
-`define AXI_DATA_WIDTH 1024
+`define AXI_DATA_WIDTH 512
+`define RISC_V_INSTRUCTION_WIDTH 32
 
 
 module cms_ip_wrapper #(
@@ -19,7 +21,7 @@ module cms_ip_wrapper #(
     // data pkt signals (to be stored in FIFO)
     input [31:0] instr,
     input [`XLEN-1:0] pc,
-    input pc_valid, // determines whether the current instruction/pc is executed now
+    // input pc_valid, // determines whether the current instruction/pc is executed now
 
     // axi signals (interfacing with FIFO)
     output wire M_AXIS_tvalid,
@@ -36,7 +38,22 @@ module cms_ip_wrapper #(
     // enable the module (if disabled, the module will not send any data to the FIFO)
     // this may be connected to the GPIO rst_n (the same one used to reset the processor)
     input en,
-    input [`NO_OF_PERFORMANCE_EVENTS-1:0]performance_events
+    input [`NO_OF_PERFORMANCE_EVENTS-1:0]performance_events,
+
+    output wire branch_event_probe1,
+    output wire jal_event_probe1,
+    output wire auipc_event_probe1,
+    output wire [`PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] branch_counter_probe1,
+    output wire [`PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] jal_counter_probe1,
+    output wire [`PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] auipc_counter_probe1,
+
+    output wire [`RISC_V_INSTRUCTION_WIDTH:0] data_pkt_instr_probe,
+    output wire [`XLEN-1:0] data_pkt_pc_probe,
+    output wire [`PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] data_pkt_branch_counter_probe,
+    output wire [`PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] data_pkt_jal_counter_probe,
+    output wire [`PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] data_pkt_auipc_counter_probe,
+
+    output wire performance_counters_rst_n_probe
 );
 
 continuous_monitoring_system #(
@@ -47,7 +64,7 @@ continuous_monitoring_system #(
     // data pkt signals (to be stored in FIFO)
     .instr(instr),
     .pc(pc),
-    .pc_valid(pc_valid), // determines whether the current instruction/pc is executed now
+    // .pc_valid(pc_valid), // determines whether the current instruction/pc is executed now
 
 
     // axi signals (interfacing with FIFO)
@@ -65,7 +82,22 @@ continuous_monitoring_system #(
     // enable the module (if disabled, the module will not send any data to the FIFO)
     // this may be connected to the GPIO rst_n (the same one used to reset the processor)
     .en(en),
-    .performance_events(performance_events)
+    .performance_events(performance_events),
+
+    .branch_event_probe1(branch_event_probe1),
+    .jal_event_probe1(jal_event_probe1),
+    .auipc_event_probe1(auipc_event_probe1),
+    .branch_counter_probe1(branch_counter_probe1),
+    .jal_counter_probe1(jal_counter_probe1),
+    .auipc_counter_probe1(auipc_counter_probe1),
+
+    .data_pkt_instr_probe(data_pkt_instr_probe),
+    .data_pkt_pc_probe(data_pkt_pc_probe),
+    .data_pkt_branch_counter_probe(data_pkt_branch_counter_probe),
+    .data_pkt_jal_counter_probe(data_pkt_jal_counter_probe),
+    .data_pkt_auipc_counter_probe(data_pkt_auipc_counter_probe),
+
+    .performance_counters_rst_n_probe(performance_counters_rst_n_probe)
 );
 
 endmodule

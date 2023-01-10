@@ -1,4 +1,4 @@
-`timescale 1ns/10ps  // time-unit = 1 ns, precision = 10 ps
+`timescale 1ns/1ps  // time-unit = 1 ns, precision = 10 ps
 
 `define ADDR_WIDTH 8 // internal addressing (each of 256 addresses can result in a different action upon writing/reading)
 `define DATA_WIDTH 64 // control data width, the functionality of the module is controlled by writing to address+data ports
@@ -25,13 +25,15 @@ module dut_continuous_monitoring_system;
 
     reg en = 1;
 
-    localparam INPUT_EVENT_BITMAP_WIDTH = 115;
-    reg [INPUT_EVENT_BITMAP_WIDTH-1:0] performance_events = 0; // bitmap
+    reg [NO_OF_PERFORMANCE_EVENTS-1:0] performance_events = 0; // bitmap
 
-    localparam PC_LOCATION = 115*7;
-    localparam INSTR_LOCATION = PC_LOCATION + 64 + 64;
-    wire [63:0]tdata_pc = M_AXIS_tdata[PC_LOCATION+63:PC_LOCATION];
-    wire [31:0]tdata_instr = M_AXIS_tdata[INSTR_LOCATION+31:INSTR_LOCATION];
+    localparam PC_LOCATION = NO_OF_PERFORMANCE_EVENTS * PERFORMANCE_EVENT_MOD_COUNTER_WIDTH;
+    localparam CLK_COUNTER_DELTA_LOCATION = PC_LOCATION + XLEN;
+    localparam INSTR_LOCATION = CLK_COUNTER_DELTA_LOCATION + CLK_COUNTER_WIDTH;
+
+    wire [XLEN - 1:0] tdata_pc = M_AXIS_tdata[PC_LOCATION+63:PC_LOCATION];
+    wire [RISC_V_INSTRUCTION_WIDTH - 1:0] tdata_instr = M_AXIS_tdata[INSTR_LOCATION+31:INSTR_LOCATION];
+    wire [CLK_COUNTER_WIDTH-1:0] tdata_clk_counter_delta = M_AXIS_tdata[CLK_COUNTER_DELTA_LOCATION+CLK_COUNTER_WIDTH-1:CLK_COUNTER_DELTA_LOCATION];
 
 
     continuous_monitoring_system #(
@@ -45,7 +47,7 @@ module dut_continuous_monitoring_system;
         // data pkt signals (to be stored in FIFO)
         .instr(instr),
         .pc(pc),
-        .pc_valid(pc_valid),
+        // .pc_valid(pc_valid),
 
         // axi signals (interfacing with FIFO)
         .M_AXIS_tvalid(M_AXIS_tvalid), // out
@@ -70,19 +72,19 @@ module dut_continuous_monitoring_system;
 
     reg [4:0] i = 0;
     always @ (posedge clk) begin
-        pc = pc +4;
-        i = i + 1;
         case (i)
             0:  begin 
                 instr = 32'h00000001; // nop
                 performance_events = 8'b10101010;
+                rst_n = 0;
             end
             1:  begin 
                 instr = 32'h0000006f; // riscv branch instruction
                 performance_events = 8'b10101010;
+                rst_n = 1;
             end
             2:  begin 
-                instr = 32'h00000001; // nop
+                instr = 32'h0000006f; // riscv branch instruction
                 performance_events = 8'b10101010;
             end
             3:  begin 
@@ -159,6 +161,13 @@ module dut_continuous_monitoring_system;
                  instr = 32'h00000000; // nop
             end
         endcase
+        if (i < 2 || i > 3) begin
+            pc = pc + 4;
+        end else begin
+            $display("pc = %h", pc);
+            pc = pc;
+        end
+        i = i + 1;
     end
 
 

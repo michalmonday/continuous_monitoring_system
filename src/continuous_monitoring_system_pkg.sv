@@ -1,10 +1,14 @@
 package continuous_monitoring_system_pkg;
 
+// NOTE: KEEP IN MIND TO UPDATE cms_ip_wrapper.v DEFINITIONS AS WELL (WHEN CHANGING PARAMETERS HERE)
+//       it has duplicate definitions because Vivado can't use SystemVerilog as top level file
+
+
 // RISC-V standard widths
 parameter XLEN = 64;
 parameter RISC_V_INSTRUCTION_WIDTH = 32;
 
-parameter AXI_DATA_WIDTH = 1024;
+parameter AXI_DATA_WIDTH = 512;
 
 // Instruction opcodes
 parameter BRANCH_OPCODE = 7'b1100011;
@@ -43,7 +47,8 @@ typedef enum logic [CTRL_ADDR_WIDTH - 1 : 0] { // control register addresses
     } ctrl_addr_t;
 
 parameter CLK_COUNTER_WIDTH = 64;
-parameter NO_OF_PERFORMANCE_EVENTS = 115;
+//parameter NO_OF_PERFORMANCE_EVENTS = 115;
+parameter NO_OF_PERFORMANCE_EVENTS = 39;
 
 parameter PERFORMANCE_EVENT_MOD_COUNTER_WIDTH = 7;
 
