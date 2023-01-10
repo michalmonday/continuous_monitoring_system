@@ -137,7 +137,7 @@ module trace_filter #(
 
     assign drop_instr = ~(  branch || 
                             jump || 
-                            WFI || 
+                            wfi || 
                             send_next_instruction || 
                             send_next_instruction_after_trap ||
                             send_next_instruction_after_interrupt);
