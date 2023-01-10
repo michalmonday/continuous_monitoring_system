@@ -5,7 +5,7 @@ in SystemVerilog. This is just a workaround.
 */
 `define CTRL_ADDR_WIDTH 8 // internal addressing (each of 256 addresses can result in a different action upon writing/reading)
 `define CTRL_DATA_WIDTH 64 // control data width, the functionality of the module is controlled by writing to address+data ports
-`define NO_OF_PERFORMANCE_EVENTS 37
+`define NO_OF_PERFORMANCE_EVENTS 39
 `define PERFORMANCE_EVENT_MOD_COUNTER_WIDTH 7
 `define XLEN 64
 `define AXI_DATA_WIDTH 512

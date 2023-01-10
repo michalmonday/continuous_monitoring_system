@@ -46,6 +46,18 @@ module trace_filter #(
             jump <= 0;
             wfi <= 0;
         end else if (pc_valid) begin
+            // // Instruction opcodes
+            // parameter BRANCH_OPCODE = 7'b1100011;
+            // parameter JAL_OPCODE = 7'b1101111;
+            // parameter JALR_OPCODE = 7'b1100111;
+
+            // // Compressed Instruction opcodes
+            // parameter C_BRANCH_OPCODE = 2'b10;
+            // parameter C_JAL_OPCODE = 2'b01;
+            // parameter C_JALR_OPCODE = 2'b00;
+            // parameter C_BRANCH_FUNCT3_2_MSB = 2'b11;
+            // parameter C_JAL_FUNCT3_3_MSB = 3'b101;
+            // parameter C_JALR_FUNCT4_3_MSB = 3'b100;
             branch <= (next_instr[6:0] == BRANCH_OPCODE) ||
                      (next_instr[1:0] == C_BRANCH_OPCODE && next_instr[15:14] == C_BRANCH_FUNCT3_2_MSB);
             jump <=  (next_instr[6:0] == JAL_OPCODE) || 
