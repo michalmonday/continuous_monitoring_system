@@ -8,10 +8,6 @@ module dut_trace_filter;
     // From program_statistics.txt
     localparam MEM_FILE_NAME = "riscv-example-cheri.mem";
     localparam NUMBER_OF_INSTRUCTIONS = 132;
-    localparam NUMBER_OF_BRANCHES = 2;
-    int  branch_instruction_array[NUMBER_OF_BRANCHES] = '{61, 106};
-
-
 
     logic                                       clk;
     logic                                       rst_n;
@@ -20,7 +16,7 @@ module dut_trace_filter;
     logic   [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH - 1 : 0]   trap_counter; // HPM Counter 2
     logic   [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH - 1 : 0]   interrupt_counter; // HPM Counter 30
 
-    logic   [RISC_V_INSTRUCTION_WIDTH - 1 : 0]  instr;
+    logic   [RISC_V_INSTRUCTION_WIDTH - 1 : 0]  next_instr;
 
     logic                                       drop_instr;
 
@@ -28,8 +24,8 @@ module dut_trace_filter;
     integer i;
 
     trace_filter #(
-        .SEND_INSTRUCTION_AFTER_BRANCH(0),
-        .SEND_INSTRUCTION_AFTER_JUMP(0),
+        .SEND_INSTRUCTION_AFTER_BRANCH(1),
+        .SEND_INSTRUCTION_AFTER_JUMP(1),
         .SEND_INSTRUCTION_AFTER_WFI(0),
         .SEND_INSTRUCTION_AFTER_TRAP(0),
         .SEND_INSTRUCTION_AFTER_INTERRUPT(1)
@@ -40,7 +36,7 @@ module dut_trace_filter;
         .pc_valid(pc_valid),
         .trap_counter(trap_counter),
         .interrupt_counter(interrupt_counter),
-        .instr(instr),
+        .next_instr(next_instr),
         .drop_instr(drop_instr));
 
     
@@ -62,7 +58,7 @@ module dut_trace_filter;
         trap_counter = PERFORMANCE_EVENT_MOD_COUNTER_WIDTH'('b0);
         interrupt_counter = PERFORMANCE_EVENT_MOD_COUNTER_WIDTH'('b0);
 
-        instr = RISC_V_INSTRUCTION_WIDTH'('b0);
+        next_instr = RISC_V_INSTRUCTION_WIDTH'('b0);
 
         $readmemh(MEM_FILE_NAME, memory);
         $display("Contents of memory:");
@@ -70,14 +66,14 @@ module dut_trace_filter;
 
         for (i = 0; i < 132; i = i + 1)
         begin
-            instr = memory[i];
+            next_instr = memory[i];
             #period;
         end
 
         // Testing dropping a second instruction functionality
 
         pc_valid = 1'b1;
-        instr = 32'h00029663; //  Branch instruction;
+        next_instr = 32'h00029663; //  Branch instruction;
 
         #period; // 1 Clock cycle
 
@@ -88,7 +84,7 @@ module dut_trace_filter;
         #period;
 
         pc_valid = 1'b1;
-        instr = 32'b00000000000100110000000000010011; // Add Instruction
+        next_instr = 32'b00000000000100110000000000010011; // Add Instruction
 
         #period;
 
@@ -106,12 +102,12 @@ module dut_trace_filter;
         #period; // 1 Clock cycle
 
         pc_valid = 1'b1;
-        instr = 32'h00000067; // JALR Instruction
+        next_instr = 32'h00000067; // JALR Instruction
 
         #period;
 
         pc_valid = 1'b1;
-        instr = 32'b00000000000100110000000000010011; // Add Instruction
+        next_instr = 32'b00000000000100110000000000010011; // Add Instruction
 
         #period;
 
@@ -119,18 +115,18 @@ module dut_trace_filter;
         pc_valid = 0;
 
         #period; // Testing Send Instruction after Interrupt
-        instr = 32'hAAAAAAAA;
+        next_instr = 32'hAAAAAAAA;
         #period;
-        instr = 32'hBBBBBBBB;
+        next_instr = 32'hBBBBBBBB;
         #period;
-        instr = 32'hCCCCCCCC;
+        next_instr = 32'hCCCCCCCC;
         #period;
 
         pc_valid = 1;
-        instr = 32'hDDDDDDDD;
+        next_instr = 32'hDDDDDDDD;
 
         #period;
-        instr = 32'b00000000000100110000000000010011; // Add Instruction
+        next_instr = 32'b00000000000100110000000000010011; // Add Instruction
 
     end
 
