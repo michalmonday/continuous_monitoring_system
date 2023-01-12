@@ -28,7 +28,8 @@ module dut_trace_filter;
         .SEND_INSTRUCTION_AFTER_JUMP(1),
         .SEND_INSTRUCTION_AFTER_WFI(0),
         .SEND_INSTRUCTION_AFTER_TRAP(0),
-        .SEND_INSTRUCTION_AFTER_INTERRUPT(1)
+        .SEND_INSTRUCTION_AFTER_INTERRUPT(1),
+        .RESYNC_TIMER_ENABLE(1)
     ) dut 
     (
         .clk(clk),

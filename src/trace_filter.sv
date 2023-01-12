@@ -13,7 +13,9 @@ module trace_filter #(
 
     
     parameter SEND_INSTRUCTION_AFTER_TRAP = 1,
-    parameter SEND_INSTRUCTION_AFTER_INTERRUPT = 1
+    parameter SEND_INSTRUCTION_AFTER_INTERRUPT = 1,
+
+    parameter RESYNC_TIMER_ENABLE = 1
 ) 
 (
     input   logic                                                   clk, 
@@ -39,6 +41,8 @@ module trace_filter #(
     reg interrupt_counter_incremented = 1'b0;
     reg send_next_instruction_after_trap = 1'b0;
     reg send_next_instruction_after_interrupt = 1'b0;
+
+    reg [RESYNC_TIMER_WIDTH - 1 : 0] resync_timer = RESYNC_TIMER_WIDTH'('b0);
 
 
     always_ff @(posedge clk) begin // Sends the instruction proceeding a branch/jump/return if the corresponding parameter is set.
@@ -109,12 +113,22 @@ module trace_filter #(
     end
         
 
+    always_ff @(posedge clk) begin // This handles resynchronisation after a certain amount of time
+        if ((rst_n == 0) || (resync_timer == RESYNC_TIMER_RESET_VALUE)) begin
+            resync_timer <= RESYNC_TIMER_WIDTH'('b0);
+        end else begin
+            resync_timer <= resync_timer + 1;
+        end
+    end
+
+
     assign drop_instr = ~(  branch || 
                             jump || 
                             wfi || 
                             send_next_instruction || 
                             send_next_instruction_after_trap ||
-                            send_next_instruction_after_interrupt);
+                            send_next_instruction_after_interrupt ||
+                            ((resync_timer == RESYNC_TIMER_RESET_VALUE) && RESYNC_TIMER_ENABLE));
         
     
 endmodule

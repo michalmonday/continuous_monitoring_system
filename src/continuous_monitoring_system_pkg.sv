@@ -25,7 +25,7 @@ parameter C_JALR_FUNCT4_3_MSB = 3'b100;
 
 // Used by trace_filter to resynchronize after an arbitrary amount of time
 parameter RESYNC_TIMER_WIDTH = 8;
-parameter RESYNC_TIMER_RESET_VALUE = 8'b00001010;
+parameter RESYNC_TIMER_RESET_VALUE = 8'b11111111;
 
 // Used by continuous monitoring system
 parameter WFI_INSTRUCTION = 32'h10500073;

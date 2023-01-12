@@ -111,7 +111,8 @@ module continuous_monitoring_system #(
         .SEND_INSTRUCTION_AFTER_JUMP(1),
         .SEND_INSTRUCTION_AFTER_WFI(0),
         .SEND_INSTRUCTION_AFTER_TRAP(0),
-        .SEND_INSTRUCTION_AFTER_INTERRUPT(0)
+        .SEND_INSTRUCTION_AFTER_INTERRUPT(0),
+        .RESYNC_TIMER_ENABLE(0)
     ) trace_filter_inst (
         .clk(clk),
         .rst_n(rst_n),
